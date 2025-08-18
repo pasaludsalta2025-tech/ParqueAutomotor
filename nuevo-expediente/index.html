@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nuevo Expediente - Parque Automotor</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    :root {
+      --primary-blue: #1e40af;
+      --primary-blue-light: #3b82f6;
+      --primary-blue-dark: #1e3a8a;
+      --blue-50: #eff6ff;
+      --blue-100: #dbeafe;
+      --blue-200: #bfdbfe;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --white: #ffffff;
+      --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+      --radius-lg: 1rem;
+      --radius: 0.5rem;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 50%, var(--primary-blue) 100%);
+      min-height: 100vh; padding: 2rem;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    .card {
+      background: var(--white);
+      border: 1px solid var(--blue-100);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      overflow: hidden;
+    }
+    .card-header {
+      display: flex; justify-content: space-between; align-items: center;
+      background: linear-gradient(135deg, var(--blue-50), var(--blue-100));
+      border-bottom: 1px solid var(--blue-200);
+      padding: 1.25rem 1.5rem;
+    }
+    .title { font-size: 1.5rem; font-weight: 700; color: var(--gray-700); }
+    .close-btn { border: 1px solid var(--gray-300); background: var(--white); border-radius: var(--radius); width: 40px; height: 40px; cursor: pointer; }
+    .card-body { padding: 1.5rem; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .group { display: flex; flex-direction: column; }
+    .label { font-weight: 600; color: var(--gray-700); margin-bottom: .4rem; font-size: .9rem; }
+    .required { color: #ef4444; }
+    .input, .select, .textarea {
+      border: 1px solid var(--gray-300); border-radius: var(--radius);
+      padding: .8rem; font-size: .95rem; outline: none;
+    }
+    .textarea { min-height: 130px; resize: vertical; }
+    .error-text { color: #ef4444; font-size: .8rem; margin-top: .35rem; }
+    .input.error, .select.error, .textarea.error { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,.1); }
+    .actions { display: flex; justify-content: flex-end; gap: .75rem; padding-top: 1.25rem; border-top: 1px solid var(--gray-200); margin-top: 1.25rem; }
+    .btn { cursor: pointer; padding: .85rem 1.2rem; border-radius: var(--radius); font-weight: 600; border: none; }
+    .btn-secondary { background: var(--white); border: 1px solid var(--gray-300); color: var(--gray-700); }
+    .btn-primary { background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-light)); color: white; }
+    @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <div class="title">Nuevo Expediente - Parque Automotor</div>
+        <button class="close-btn" title="Cerrar" onclick="goHome()">✕</button>
+      </div>
+      <div class="card-body">
+        <form id="expForm">
+          <div class="grid">
+            <div class="group">
+              <label class="label"># CÓDIGO DE EXPEDIENTE <span class="required">*</span></label>
+              <input class="input" name="codigo" placeholder="Ej: EXP-001" required />
+            </div>
+            <div class="group">
+              <label class="label">📋 NÚMERO DE EXPEDIENTE</label>
+              <input class="input" name="numero" placeholder="Ej: 001" />
+            </div>
+            <div class="group">
+              <label class="label">📅 AÑO</label>
+              <input class="input" type="number" name="anio" value="2025" min="2020" max="2035" />
+            </div>
+            <div class="group">
+              <label class="label">🏢 CORRESPONDE</label>
+              <input class="input" name="corresponde" placeholder="Ej: Flota Ejecutiva" />
+            </div>
+            <div class="group">
+              <label class="label">📋 TIPO DE EXPEDIENTE <span class="required">*</span></label>
+              <select class="input" name="tipo" required>
+                <option value="">Seleccionar tipo</option>
+                <option value="Parque Automotor Ejecutivo">Parque Automotor Ejecutivo</option>
+                <option value="Compras">Compras</option>
+              </select>
+            </div>
+            <div class="group">
+              <label class="label">👤 DERIVADO A PERSONA</label>
+              <input class="input" name="derivado" placeholder="Ej: Juan Pérez" />
+            </div>
+            
+            <div class="group">
+              <label class="label">📅 FECHA DE INGRESO <span class="required">*</span></label>
+              <input class="input" type="date" name="fechaIngreso" required />
+            </div>
+            <div class="group">
+              <label class="label">📅 FECHA DE DERIVACIÓN</label>
+              <input class="input" type="date" name="fechaDerivacion" />
+            </div>
+          </div>
+
+          <div class="group" style="margin-top:1rem;">
+            <label class="label">📝 DETALLE</label>
+            <textarea class="textarea" name="detalle" placeholder="Descripción detallada del expediente"></textarea>
+          </div>
+          <div class="group" style="margin-top:1rem;">
+            <label class="label">💭 OBSERVACIÓN</label>
+            <textarea class="textarea" name="observacion" placeholder="Observaciones adicionales del expediente"></textarea>
+          </div>
+          <div class="group" style="margin-top:1rem; max-width:240px;">
+            <label class="label">⏳ DÍAS DE TRÁMITE</label>
+            <input class="input" type="number" name="diasTramite" value="0" min="0" />
+          </div>
+
+          <div class="actions">
+            <button type="button" class="btn btn-secondary" onclick="goHome()">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Confirmar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function goHome(){ window.location.href = '/'; }
+    function getStored(){ try { return JSON.parse(localStorage.getItem('expedientesCreados')||'[]'); } catch { return []; } }
+    function setStored(list){ localStorage.setItem('expedientesCreados', JSON.stringify(list)); }
+
+    // Prefijar fecha de hoy
+    (function(){
+      const el = document.querySelector('input[name="fechaIngreso"]');
+      if (el) el.value = new Date().toISOString().split('T')[0];
+    })();
+
+    function showError(inputEl, message){
+      if (!inputEl) return;
+      inputEl.classList.add('error');
+      // Remove existing error text next sibling
+      if (inputEl.nextElementSibling && inputEl.nextElementSibling.classList.contains('error-text')){
+        inputEl.nextElementSibling.remove();
+      }
+      const small = document.createElement('div');
+      small.className = 'error-text';
+      small.textContent = message;
+      inputEl.insertAdjacentElement('afterend', small);
+    }
+
+    function clearError(inputEl){
+      if (!inputEl) return;
+      inputEl.classList.remove('error');
+      if (inputEl.nextElementSibling && inputEl.nextElementSibling.classList.contains('error-text')){
+        inputEl.nextElementSibling.remove();
+      }
+    }
+
+    function validateForm(form){
+      let firstErrorEl = null;
+      // Read values
+      const codigoEl = form.querySelector('[name="codigo"]');
+      const numeroEl = form.querySelector('[name="numero"]');
+      const anioEl = form.querySelector('[name="anio"]');
+      const correspondeEl = form.querySelector('[name="corresponde"]');
+      const derivadoEl = form.querySelector('[name="derivado"]');
+      const tipoEl = form.querySelector('[name="tipo"]');
+      const fechaIngresoEl = form.querySelector('[name="fechaIngreso"]');
+      const fechaDerivacionEl = form.querySelector('[name="fechaDerivacion"]');
+      const detalleEl = form.querySelector('[name="detalle"]');
+      const observacionEl = form.querySelector('[name="observacion"]');
+      const diasTramiteEl = form.querySelector('[name="diasTramite"]');
+
+      // Clear previous errors
+      [codigoEl, numeroEl, anioEl, tipoEl, fechaIngresoEl, fechaDerivacionEl, diasTramiteEl, detalleEl].forEach(clearError);
+
+      // Normalizations
+      if (codigoEl) codigoEl.value = (codigoEl.value || '').toUpperCase().trim();
+
+      // Validations
+      // Tipo: obligatorio
+      const tipo = (tipoEl.value || '').trim();
+      if (!tipo) {
+        showError(tipoEl, 'El tipo de expediente es obligatorio.');
+        firstErrorEl = firstErrorEl || tipoEl;
+      }
+      
+      // Código: formato ABC-001 (2-5 letras mayúsculas, guión, 3-5 dígitos)
+      const codigo = codigoEl.value;
+      const codigoPattern = /^[A-Z]{2,5}-\d{3,5}$/;
+      if (!codigo){
+        showError(codigoEl, 'El código es obligatorio. Ej: EXP-001');
+        firstErrorEl = firstErrorEl || codigoEl;
+      } else if (!codigoPattern.test(codigo)){
+        showError(codigoEl, 'Formato inválido. Use letras mayúsculas + guión + números (Ej: EXP-001)');
+        firstErrorEl = firstErrorEl || codigoEl;
+      }
+
+      // Número: opcional, si existe solo dígitos (1-6)
+      const numero = (numeroEl.value || '').trim();
+      if (numero && !/^\d{1,6}$/.test(numero)){
+        showError(numeroEl, 'Solo números (1 a 6 dígitos).');
+        firstErrorEl = firstErrorEl || numeroEl;
+      }
+
+      // Año: 2020-2035
+      const anio = parseInt((anioEl.value || '').trim(), 10);
+      if (Number.isNaN(anio) || anio < 2020 || anio > 2035){
+        showError(anioEl, 'Año inválido (entre 2020 y 2035).');
+        firstErrorEl = firstErrorEl || anioEl;
+      }
+
+      // Fecha ingreso obligatoria
+      const fiStr = (fechaIngresoEl.value || '').trim();
+      if (!fiStr){
+        showError(fechaIngresoEl, 'La fecha de ingreso es obligatoria.');
+        firstErrorEl = firstErrorEl || fechaIngresoEl;
+      }
+
+      // Fecha derivación opcional pero no anterior a ingreso
+      const fdStr = (fechaDerivacionEl.value || '').trim();
+      if (fdStr && fiStr){
+        const fi = new Date(fiStr);
+        const fd = new Date(fdStr);
+        if (fd < fi){
+          showError(fechaDerivacionEl, 'La fecha de derivación no puede ser anterior a la de ingreso.');
+          firstErrorEl = firstErrorEl || fechaDerivacionEl;
+        }
+      }
+
+      // Días de trámite: entero >= 0
+      const dias = (diasTramiteEl.value || '').trim();
+      if (dias && !/^\d+$/.test(dias)){
+        showError(diasTramiteEl, 'Ingrese un número entero válido (>= 0).');
+        firstErrorEl = firstErrorEl || diasTramiteEl;
+      }
+
+      // Detalle opcional, pero si existe mínimo 3 caracteres
+      const det = (detalleEl.value || '').trim();
+      if (det && det.length < 3){
+        showError(detalleEl, 'El detalle debe tener al menos 3 caracteres.');
+        firstErrorEl = firstErrorEl || detalleEl;
+      }
+
+      if (firstErrorEl){
+        firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstErrorEl.focus();
+        return false;
+      }
+      return true;
+    }
+
+    // Clear field error on input
+    document.querySelectorAll('#expForm .input, #expForm .textarea').forEach(el => {
+      el.addEventListener('input', () => clearError(el));
+      el.addEventListener('change', () => clearError(el));
+      el.addEventListener('blur', () => { if ((el.value || '').trim()) clearError(el); });
+    });
+
+    // Funciones para localStorage
+    function getStoredCreated() {
+      return JSON.parse(localStorage.getItem('expedientesCreados') || '[]');
+    }
+    
+    function setStoredCreated(list) {
+      localStorage.setItem('expedientesCreados', JSON.stringify(list));
+    }
+
+    // Función para cargar datos desde la URL (edición)
+    function loadExpedienteFromURL() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.toString()) {
+        console.log('📝 Cargando expediente para edición desde URL:', urlParams.toString());
+        
+        // Cambiar título para indicar que es edición
+        document.querySelector('.title').textContent = 'Editar Expediente - Parque Automotor';
+        
+        // Cargar todos los campos disponibles
+        const fields = ['codigo', 'numero', 'anio', 'corresponde', 'derivado', 'fechaIngreso', 'fechaDerivacion', 'detalle', 'observacion', 'diasTramite', 'tipo'];
+        
+        fields.forEach(field => {
+          const value = urlParams.get(field);
+          if (value) {
+            const element = document.querySelector(`[name="${field}"]`);
+            if (element) {
+              element.value = value;
+              console.log(`✅ Campo ${field} cargado con valor:`, value);
+            }
+          }
+        });
+        
+        // Si es edición, cambiar el botón de submit
+        const submitBtn = document.querySelector('.btn-primary');
+        if (submitBtn) {
+          submitBtn.textContent = 'ACTUALIZAR EXPEDIENTE';
+        }
+        
+        console.log('✅ Expediente cargado para edición');
+      }
+    }
+
+    // Cargar expediente al cargar la página
+    document.addEventListener('DOMContentLoaded', loadExpedienteFromURL);
+
+    document.getElementById('expForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      const form = e.target;
+      if (!validateForm(form)) return;
+      const data = Object.fromEntries(new FormData(form).entries());
+      if (!data.codigo || !data.fechaIngreso){
+        alert('Complete los campos obligatorios: Código y Fecha de Ingreso.');
+        return;
+      }
+      
+      // Verificar si es edición o creación nueva
+      const urlParams = new URLSearchParams(window.location.search);
+      const isEditing = urlParams.toString() !== '';
+      
+      // Crear el expediente con estructura completa
+      const expediente = {
+        codigo: data.codigo.trim(),
+        numero: (data.numero||'').trim(),
+        anio: (data.anio||'').trim(),
+        corresponde: (data.corresponde||'').trim(),
+        derivado: (data.derivado||'').trim(),
+        fechaIngreso: data.fechaIngreso,
+        fechaDerivacion: data.fechaDerivacion || '',
+        detalle: (data.detalle||'').trim(),
+        observacion: (data.observacion||'').trim(),
+        diasTramite: (data.diasTramite||'').trim(),
+        tipo: data.tipo || 'Parque Automotor Ejecutivo',
+        status: 'CREADO',
+        fechaCreacion: new Date().toISOString()
+      };
+      
+      if (isEditing) {
+        // MODIFICACIÓN: Actualizar expediente existente
+        console.log('✏️ MODIFICANDO expediente existente:', expediente.codigo);
+        
+        // Buscar y actualizar en todas las listas
+        let actualizado = false;
+        
+        // Actualizar en creados
+        const expedientesCreados = getStoredCreated();
+        const indexCreados = expedientesCreados.findIndex(e => e.codigo === expediente.codigo);
+        if (indexCreados !== -1) {
+          expedientesCreados[indexCreados] = { ...expedientesCreados[indexCreados], ...expediente };
+          setStoredCreated(expedientesCreados);
+          actualizado = true;
+          console.log('✅ Actualizado en Expedientes Creados');
+        }
+        
+        // Actualizar en ejecutivo
+        const expedientesEjecutivo = JSON.parse(localStorage.getItem('expedientesEjecutivo') || '[]');
+        const indexEjecutivo = expedientesEjecutivo.findIndex(e => e.codigo === expediente.codigo);
+        if (indexEjecutivo !== -1) {
+          expedientesEjecutivo[indexEjecutivo] = { ...expedientesEjecutivo[indexEjecutivo], ...expediente };
+          localStorage.setItem('expedientesEjecutivo', JSON.stringify(expedientesEjecutivo));
+          actualizado = true;
+          console.log('✅ Actualizado en Parque Automotor Ejecutivo');
+        }
+        
+        // Actualizar en compras
+        const expedientesCompras = JSON.parse(localStorage.getItem('expedientesCompras') || '[]');
+        const indexCompras = expedientesCompras.findIndex(e => e.codigo === expediente.codigo);
+        if (indexCompras !== -1) {
+          expedientesCompras[indexCompras] = { ...expedientesCompras[indexCompras], ...expediente };
+          localStorage.setItem('expedientesCompras', JSON.stringify(expedientesCompras));
+          actualizado = true;
+          console.log('✅ Actualizado en Centro de Compras');
+        }
+        
+        if (actualizado) {
+          alert('Expediente actualizado exitosamente');
+        } else {
+          alert('Expediente no encontrado para actualizar');
+        }
+      } else {
+        // CREACIÓN: Nuevo expediente
+        console.log('📝 CREANDO nuevo expediente:', expediente.codigo);
+        
+        // Guardar en expedientesCreados
+        const list = getStoredCreated();
+        console.log('📝 DEBUG: Expediente a guardar:', expediente);
+        console.log('📝 DEBUG: Lista actual:', list);
+        list.push(expediente);
+        setStoredCreated(list);
+        console.log('📝 DEBUG: Lista después de guardar:', list);
+        console.log('📝 DEBUG: localStorage actual:', localStorage.getItem('expedientesCreados'));
+        
+        alert('Expediente creado exitosamente');
+      }
+      
+      // Redirigir a inicio
+      window.location.href = '/';
+    });
+  </script>
+</body>
+</html>
+
+

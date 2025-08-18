@@ -1,0 +1,2408 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Expediente - Parque Automotor</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #1e40af;
+            --primary-blue-light: #3b82f6;
+            --primary-blue-dark: #1e3a8a;
+            --accent-blue: #60a5fa;
+            --blue-50: #eff6ff;
+            --blue-100: #dbeafe;
+            --blue-200: #bfdbfe;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --white: #ffffff;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --border-radius-sm: 0.375rem;
+            --border-radius: 0.5rem;
+            --border-radius-md: 0.75rem;
+            --border-radius-lg: 1rem;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 50%, var(--primary-blue) 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            padding: 2rem;
+            position: relative;
+            overflow-x: auto;
+            text-transform: uppercase;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.02"><circle cx="30" cy="30" r="1"/></g></g></svg>');
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+            border-radius: 2px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.02em;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #ffffff 0%, var(--blue-200) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.25rem;
+            opacity: 0.95;
+            font-weight: 400;
+            letter-spacing: 0.025em;
+        }
+
+        .main-card {
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-xl);
+            margin-bottom: 2.5rem;
+            overflow: hidden;
+            border: 1px solid var(--blue-100);
+            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .main-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 25px 50px -12px rgba(30, 64, 175, 0.25);
+        }
+
+        .card-header {
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--blue-50) 0%, var(--blue-100) 100%);
+            border-bottom: 1px solid var(--blue-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--accent-blue), var(--primary-blue));
+        }
+
+        .card-header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .card-header h2 {
+            color: var(--gray-800);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .icon-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-light));
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-md);
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-light));
+            color: white;
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: var(--border-radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .add-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .add-btn:hover::before {
+            left: 100%;
+        }
+
+        .add-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .card-content {
+            padding: 2rem;
+            color: var(--gray-600);
+            font-size: 1rem;
+            line-height: 1.6;
+            background: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 100%);
+        }
+
+        /* FILTRO GLOBAL */
+        .filter-bar {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 0.5rem 0.9rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 0.5rem;
+            background: var(--white);
+            color: var(--gray-700);
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .filter-btn.active {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-light));
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-card {
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            border: 1px solid var(--gray-200);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .section-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--accent-blue));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .section-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--blue-200);
+        }
+
+        .section-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .section-header {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--gray-50) 0%, var(--blue-50) 100%);
+            border-bottom: 1px solid var(--gray-200);
+            position: relative;
+        }
+
+        .section-header h3 {
+            color: var(--gray-800);
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-icon-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary-blue-light), var(--accent-blue));
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-content {
+            padding: 1.5rem;
+            background: var(--white);
+        }
+
+        .expediente-item {
+            background: linear-gradient(135deg, var(--blue-50) 0%, var(--white) 100%);
+            border: 1px solid var(--blue-200);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .expediente-item:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary-blue-light);
+        }
+
+        .expediente-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .expediente-header {
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            padding-right: 120px;
+        }
+
+        .expediente-details {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            line-height: 1.5;
+        }
+
+        .expediente-details strong {
+            color: var(--gray-700);
+            font-weight: 600;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .status-finalizado {
+            background: var(--success-light);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-pendiente {
+            background: var(--warning-light);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .status-alert {
+            background: var(--danger-light);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--gray-400);
+            padding: 3rem 1.5rem;
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.6;
+        }
+
+        .empty-state p {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .shopping-preview {
+            background: linear-gradient(135deg, var(--blue-50) 0%, var(--white) 100%);
+            border: 1px solid var(--blue-200);
+            border-radius: var(--border-radius-md);
+            padding: 2rem;
+            text-align: center;
+            color: var(--gray-600);
+            transition: all 0.3s ease;
+        }
+
+        .shopping-preview:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .shopping-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            opacity: 0.7;
+        }
+
+        .executive-item {
+            background: linear-gradient(135deg, #fef7ed 0%, var(--white) 100%);
+            border: 1px solid #fed7aa;
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .executive-item:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--warning);
+        }
+
+        .executive-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .delete-btn {
+            background: var(--white);
+            border: 1px solid var(--danger-light);
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 16px;
+            width: 32px;
+            height: 32px;
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .delete-btn:hover {
+            background: var(--danger-light);
+            border-color: var(--danger);
+            transform: scale(1.1);
+        }
+
+        .delete-btn:active {
+            transform: scale(0.95);
+        }
+
+        .edit-btn {
+            padding: 0.45rem 0.8rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--warning);
+            background: var(--white);
+            color: var(--warning);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .edit-btn:hover {
+            background: var(--warning);
+            color: var(--white);
+            transform: scale(1.05);
+        }
+
+        /* Toolbar de selección y envío */
+        .item-actions {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .inline-select {
+            padding: 0.45rem 0.6rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+            background: var(--white);
+            color: var(--gray-700);
+        }
+        .send-btn, .send-back-btn {
+            padding: 0.45rem 0.8rem;
+            border-radius: 0.5rem;
+            border: none;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-light));
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            background: var(--gray-50);
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .stat-number {
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        /* Form Page Styles */
+        .form-page {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 50%, var(--primary-blue) 100%);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        .form-page.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+            border: 1px solid var(--blue-100);
+        }
+
+        .form-header {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--blue-50) 0%, var(--blue-100) 100%);
+            border-bottom: 1px solid var(--blue-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .form-header h2 {
+            color: var(--gray-800);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .close-btn {
+            background: var(--white);
+            border: 1px solid var(--gray-300);
+            color: var(--gray-600);
+            cursor: pointer;
+            font-size: 16px;
+            width: 36px;
+            height: 36px;
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .close-btn:hover {
+            background: var(--gray-100);
+            color: var(--gray-800);
+        }
+
+        .form-content {
+            padding: 1.5rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.4rem;
+            color: var(--gray-700);
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .form-label .required {
+            color: var(--danger);
+        }
+
+        .form-input, .form-select, .form-textarea {
+            padding: 0.75rem;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .btn {
+            padding: 0.75rem 1.25rem;
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-secondary {
+            background: var(--white);
+            color: var(--gray-700);
+            border: 1px solid var(--gray-300);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-50);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-light));
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        @media (max-width: 1024px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2.25rem;
+            }
+
+            .header p {
+                font-size: 1.125rem;
+            }
+            
+            .card-header {
+                padding: 1.5rem;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+            }
+
+            .card-header-left {
+                justify-content: space-between;
+            }
+
+            .card-content {
+                padding: 1.5rem;
+            }
+
+            .section-content {
+                padding: 1rem;
+            }
+
+            .expediente-item,
+            .executive-item {
+                padding: 1rem;
+            }
+
+            .expediente-header {
+                padding-right: 100px;
+                font-size: 0.875rem;
+            }
+
+            .stats-bar {
+                flex-wrap: wrap;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .form-content {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 0.5rem;
+            }
+
+            .header {
+                margin-bottom: 2rem;
+            }
+
+            .header h1 {
+                font-size: 1.875rem;
+            }
+
+            .main-card {
+                margin-bottom: 1.5rem;
+            }
+
+            .grid-container {
+                gap: 1rem;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--gray-100);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-blue-light);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-blue);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E%F0%9F%9A%97%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+    <!-- LOGIN PAGE -->
+    <div class="form-page active" id="loginPage">
+        <div class="form-container" style="max-width: 500px;">
+            <div class="form-header">
+                <h2>
+                    <div class="icon-wrapper" style="width: 40px; height: 40px;">
+                        <svg class="icon" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                            <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.89 1 3 1.89 3 3V21C3 22.11 3.89 23 5 23H11V21H5V3H13V9H21Z"/>
+                        </svg>
+                    </div>
+                    INICIAR SESIÓN
+                </h2>
+            </div>
+            
+            <div class="form-content">
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label class="form-label">🆔 DNI (USUARIO) <span class="required">*</span></label>
+                        <input type="text" name="username" class="form-input" placeholder="INGRESE SU DNI" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">🔒 CONTRASEÑA <span class="required">*</span></label>
+                        <input type="password" name="password" class="form-input" placeholder="INGRESE SU CONTRASEÑA" required>
+                    </div>
+                    <div class="form-actions" style="flex-direction: column; gap: 1rem;">
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">🚀 INGRESAR AL SISTEMA</button>
+                        <div style="text-align: center; color: var(--gray-600);">
+                            ¿NO TIENES CUENTA? 
+                            <a href="#" onclick="showRegister()" style="color: var(--primary-blue); font-weight: 600; text-decoration: none;">REGÍSTRATE AQUÍ</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- REGISTER PAGE -->
+    <div class="form-page" id="registerPage">
+        <div class="form-container" style="max-width: 600px;">
+            <div class="form-header">
+                <h2>
+                    <div class="icon-wrapper" style="width: 40px; height: 40px;">
+                        <svg class="icon" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                            <path d="M15 12C17.21 12 19 10.21 19 8S17.21 4 15 4 11 5.79 11 8 12.79 12 15 12M6 10V7H4V10H1V12H4V15H6V12H9V10M15 14C12.33 14 7 15.34 7 18V20H23V18C23 15.34 17.67 14 15 14Z"/>
+                        </svg>
+                    </div>
+                    REGISTRO DE USUARIO
+                </h2>
+                <button class="close-btn" onclick="showLogin()" title="VOLVER AL LOGIN">←</button>
+            </div>
+            
+            <div class="form-content">
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label class="form-label">🆔 DNI <span class="required">*</span></label>
+                        <input type="text" name="dni" class="form-input" placeholder="EJ: 12345678" required pattern="^\d{7,9}$" title="INGRESE SOLO NÚMEROS (7 A 9 DÍGITOS)">
+                    </div>
+
+                    <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                        <div class="form-group">
+                            <label class="form-label">👤 NOMBRE COMPLETO <span class="required">*</span></label>
+                            <input type="text" name="nombre" class="form-input" placeholder="EJ: JUAN CARLOS" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">📝 APELLIDO <span class="required">*</span></label>
+                            <input type="text" name="apellido" class="form-input" placeholder="EJ: GONZÁLEZ" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">👤 USUARIO (AUTOCOMPLETADO CON DNI)</label>
+                        <input type="text" name="username" class="form-input" placeholder="SE AUTOCOMPLETA CON DNI" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">🔒 CONTRASEÑA <span class="required">*</span></label>
+                        <input type="password" name="password" class="form-input" placeholder="MÍNIMO 6 CARACTERES" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">🔒 REPETIR CONTRASEÑA <span class="required">*</span></label>
+                        <input type="password" name="confirmPassword" class="form-input" placeholder="CONFIRME SU CONTRASEÑA" required minlength="6">
+                    </div>
+                    <div class="form-actions" style="flex-direction: column; gap: 1rem;">
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">✅ REGISTRAR USUARIO</button>
+                        <div style="text-align: center; color: var(--gray-600);">
+                            ¿YA TIENES CUENTA? 
+                            <a href="#" onclick="showLogin()" style="color: var(--primary-blue); font-weight: 600; text-decoration: none;">INICIA SESIÓN AQUÍ</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="mainPage" style="display: none;">
+        <div class="header">
+            <h1>CONTROL DE EXPEDIENTE</h1>
+            <h1 style="margin-top: -0.5rem;">PARQUE AUTOMOTOR</h1>
+            <p>Sistema integral de gestión de expedientes automotores</p>
+            <div style="position: absolute; top: 1rem; right: 1rem; display:flex; gap:.5rem;">
+                <button class="btn btn-secondary" onclick="window.location.href='/configuracion/'" style="padding: 0.5rem 1rem;">⚙️ CONFIGURACIÓN</button>
+                <button class="btn btn-secondary" onclick="logout()" style="padding: 0.5rem 1rem;">🚪 CERRAR SESIÓN</button>
+            </div>
+        </div>
+
+        <div class="main-card">
+            <div class="card-header">
+                <div class="card-header-left">
+                    <div class="icon-wrapper">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                        </svg>
+                    </div>
+                    <h2>Mesa de Entrada</h2>
+                </div>
+                <button class="add-btn" onclick="window.location.href='/nuevo-expediente/'" title="Agregar nuevo expediente">+</button>
+            </div>
+            <div class="card-content">
+                Administre y controle todos los expedientes del parque automotor desde un panel centralizado con herramientas avanzadas de seguimiento y gestión profesional.
+                
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <span>📊</span>
+                        <span>Total: <span class="stat-number" id="totalExpedientes">1</span></span>
+                    </div>
+                    <div class="stat-item">
+                        <span>✅</span>
+                        <span>Finalizados: <span class="stat-number" id="finalizados">1</span></span>
+                    </div>
+                    <div class="stat-item">
+                        <span>⏳</span>
+                        <span>Pendientes: <span class="stat-number" id="pendientes">0</span></span>
+                    </div>
+                </div>
+
+                <div class="filter-bar">
+                    <span style="color:var(--gray-700); font-weight:600;">FILTRAR:</span>
+                    <button class="filter-btn" data-filter="TODOS">TODOS</button>
+                    <button class="filter-btn" data-filter="PENDIENTE">PENDIENTE</button>
+                    <button class="filter-btn" data-filter="CONFIRMADOS">CONFIRMADOS</button>
+                </div>
+
+
+            </div>
+        </div>
+
+        <div class="grid-container">
+            <div class="section-card">
+                <div class="section-header">
+                    <h3>
+                        <div class="section-icon-wrapper">
+                            <svg class="icon" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                                <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h8c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+                            </svg>
+                        </div>
+                        Expedientes Creados
+                    </h3>
+
+                </div>
+                
+                <!-- Barra de búsqueda por fecha -->
+                <div class="search-bar" style="margin-bottom: 1rem; padding: 0.75rem; background: var(--gray-50); border-radius: 0.5rem; border: 1px solid var(--gray-200);">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <label style="font-size: 0.85rem; font-weight: 600; color: var(--gray-700);">DESDE:</label>
+                            <input type="date" id="fechaDesde" class="input" style="padding: 0.4rem; font-size: 0.85rem; border: 1px solid var(--gray-300); border-radius: 0.375rem;" />
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <label style="font-size: 0.85rem; font-weight: 600; color: var(--gray-700);">HASTA:</label>
+                            <input type="date" id="fechaHasta" class="input" style="padding: 0.4rem; font-size: 0.85rem; border: 1px solid var(--gray-300); border-radius: 0.375rem;" />
+                        </div>
+                        <button onclick="buscarPorFecha()" class="btn" style="background: var(--primary-blue); color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 0.375rem; font-size: 0.85rem; font-weight: 600; cursor: pointer;">🔍 BUSCAR</button>
+                    </div>
+                </div>
+                
+                <div class="section-content" id="expedientesCreados">
+                    <div class="expediente-item">
+                        <div class="status-badge status-finalizado">FINALIZADO</div>
+                        <div class="expediente-header">EXP-003 - Renovación de pólizas de seguro para todo el parque automotor</div>
+                        <div class="expediente-details">
+                            <strong>📅 07/01/2024</strong><br>
+                            <strong>Código:</strong> EXP-003<br>
+                            <strong>Número:</strong> 003/2024<br>
+                            <strong>Corresponde:</strong> Seguros<br>
+                            <strong>Derivado a:</strong> Carlos López<br>
+                            <strong>Días de trámite:</strong> 25 días
+                        </div>
+                    </div>
+                    <div class="empty-state" id="emptyExpedientes" style="display: none;">
+                        <div class="empty-icon">📄</div>
+                        <p>No hay expedientes creados</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-header">
+                    <h3>
+                        <div class="section-icon-wrapper">
+                            <svg class="icon" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                                <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.22.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM5 11l1.5-4.5h11L19 11H5z"/>
+                            </svg>
+                        </div>
+                        Parque Automotor Ejecutivo
+                    </h3>
+                </div>
+                <div class="section-content" id="executiveSection">
+                    <div class="executive-item" data-default="true">
+                        <button class="delete-btn" onclick="deleteExecutive(this)" title="Eliminar expediente">🗑️</button>
+                        <div class="status-badge status-pendiente">PENDIENTE</div>
+                        <div class="expediente-header">SDA-001 - Solicitud de documentación adicional</div>
+                        <div class="expediente-details">
+                            <strong>📅 05/08/2025</strong><br>
+                            <strong>Código:</strong> SDA-001<br>
+                            <strong>Número:</strong> 222/2025<br>
+                            <strong>Corresponde:</strong> Documentación<br>
+                            <strong>Derivado a:</strong> Área Legal<br>
+                            <strong>Días de trámite:</strong> 0 días
+                        </div>
+                    </div>
+                    <div class="empty-state" id="emptyExecutive" style="display: none;">
+                        <div class="empty-icon">🚗</div>
+                        <p>No hay expedientes ejecutivos</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-header">
+                    <h3>
+                        <div class="section-icon-wrapper">
+                            <svg class="icon" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                                <path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12L8.1 13h7.45c.75 0 1.41-.41 1.75-1.03L21.7 4H5.21l-.94-2H1zm16 16c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                            </svg>
+                        </div>
+                        Centro de Compras
+                    </h3>
+                </div>
+                <div class="section-content">
+                    <div class="shopping-preview">
+                        <div class="shopping-icon">🛒</div>
+                        <h4 style="margin-bottom: 0.5rem; color: var(--gray-700);">Sistema de Compras Integrado</h4>
+                        <p style="margin-bottom: 1rem;">Control de Expediente - Parque Automotor</p>
+                        <small style="color: var(--gray-500);">📱 App.js - Módulo de gestión de compras y expedientes</small>
+                        
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--gray-200);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.875rem;">
+                                <span style="color: var(--gray-600);">Estado del módulo:</span>
+                                <span style="color: var(--success); font-weight: 600;">🟢 Activo</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ROLE PENDING PAGE -->
+    <div class="form-page" id="rolePendingPage">
+        <div class="form-container" style="max-width: 560px;">
+            <div class="form-header">
+                <h2>
+                    <div class="icon-wrapper" style="width: 40px; height: 40px;">
+                        <svg class="icon" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                            <path d="M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2M11,6H13V13H11V6M11,16H13V18H11V16Z"/>
+                        </svg>
+                    </div>
+                    ROL PENDIENTE
+                </h2>
+            </div>
+            <div class="form-content" style="text-align:center;">
+                <p style="color: var(--gray-700); margin-bottom: 1rem;">SU USUARIO AÚN NO TIENE ROL ASIGNADO.</p>
+                                        <p style="color: var(--gray-600);">CONTACTE AL ADMIN PARA CONTINUAR.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Page -->
+    <div class="form-page" id="formPage">
+        <div class="form-container">
+            <div class="form-header">
+                <h2>
+                    <div class="icon-wrapper" style="width: 40px; height: 40px;">
+                        <svg class="icon" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                            <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h8c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+                        </svg>
+                    </div>
+                    Nuevo Expediente - Parque Automotor
+                </h2>
+                <button class="close-btn" onclick="closeForm()" title="Cerrar">✕</button>
+            </div>
+            
+            <div class="form-content">
+                <form id="expedienteForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                # CÓDIGO DE EXPEDIENTE <span class="required">*</span>
+                            </label>
+                            <input type="text" name="codigo" class="form-input" placeholder="Ej: EXP-001" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">
+                                📋 NÚMERO DE EXPEDIENTE
+                            </label>
+                            <input type="text" name="numero" class="form-input" placeholder="Ej: 001">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">
+                                📅 AÑO
+                            </label>
+                            <input type="number" name="anio" class="form-input" value="2025" min="2020" max="2030">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">
+                                🏢 CORRESPONDE
+                            </label>
+                            <input type="text" name="corresponde" class="form-input" placeholder="Ej: Flota Ejecutiva">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">
+                                📋 TIPO DE EXPEDIENTE
+                            </label>
+                            <select name="tipo" class="form-select">
+                                <option value="">Seleccionar tipo</option>
+                                <option value="Parque Automotor Ejecutivo">Parque Automotor Ejecutivo</option>
+                                <option value="Compras">Compras</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">
+                                👤 DERIVADO A PERSONA
+                            </label>
+                            <input type="text" name="derivado" class="form-input" placeholder="Ej: Juan Pérez">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">
+                                📅 FECHA DE INGRESO
+                            </label>
+                            <input type="date" name="fechaIngreso" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">
+                                📅 FECHA DE DERIVACIÓN
+                            </label>
+                            <input type="date" name="fechaDerivacion" class="form-input">
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label class="form-label">
+                                📝 DETALLE
+                            </label>
+                            <textarea name="detalle" class="form-textarea" placeholder="Descripción detallada del expediente"></textarea>
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label class="form-label">
+                                💭 OBSERVACIÓN
+                            </label>
+                            <textarea name="observacion" class="form-textarea" placeholder="Observaciones adicionales del expediente"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">
+                                ⏳ DÍAS DE TRÁMITE
+                            </label>
+                            <input type="number" name="diasTramite" class="form-input" value="0" min="0">
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeForm()">
+                            ✕ Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            ✓ Confirmar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Persistencia con localStorage ---
+        function parseJSONSafe(text, fallback) {
+            try { return JSON.parse(text || ''); } catch { return fallback; }
+        }
+
+        function getStoredCreated() {
+            return parseJSONSafe(localStorage.getItem('expedientesCreados'), []);
+        }
+        function setStoredCreated(list) {
+            localStorage.setItem('expedientesCreados', JSON.stringify(list));
+        }
+
+        function getStoredFinalizados() {
+            return parseJSONSafe(localStorage.getItem('expedientesFinalizados'), []);
+        }
+        function setStoredFinalizados(list) {
+            localStorage.setItem('expedientesFinalizados', JSON.stringify(list));
+        }
+
+        function getStoredEjecutivo() {
+            return parseJSONSafe(localStorage.getItem('expedientesEjecutivo'), []);
+        }
+        function setStoredEjecutivo(list) {
+            localStorage.setItem('expedientesEjecutivo', JSON.stringify(list));
+        }
+
+        function getStoredCompras() {
+            return parseJSONSafe(localStorage.getItem('expedientesCompras'), []);
+        }
+        function setStoredCompras(list) {
+            localStorage.setItem('expedientesCompras', JSON.stringify(list));
+        }
+
+        function renderAllInCreated() {
+            console.log('🚀 INICIANDO renderAllInCreated...');
+            
+            const createdList = getStoredCreated();
+            const execList = getStoredEjecutivo();
+            const compList = getStoredCompras();
+            const finList = getStoredFinalizados();
+
+            console.log('🔍 DEBUG renderAllInCreated:');
+            console.log('  - Creados:', createdList);
+            console.log('  - Ejecutivo:', execList);
+            console.log('  - Compras:', compList);
+            console.log('  - Finalizados:', finList);
+            console.log('  - localStorage raw expedientesCreados:', localStorage.getItem('expedientesCreados'));
+            console.log('  - localStorage raw expedientesEjecutivo:', localStorage.getItem('expedientesEjecutivo'));
+            console.log('  - localStorage raw expedientesCompras:', localStorage.getItem('expedientesCompras'));
+            console.log('  - localStorage raw expedientesFinalizados:', localStorage.getItem('expedientesFinalizados'));
+
+            const mapByCode = new Map();
+            const upsert = (e) => { 
+                console.log('  🔄 Procesando expediente:', e);
+                if (!e || !e.codigo) {
+                    console.log('    ❌ Expediente inválido o sin código');
+                    return; 
+                }
+                if (!mapByCode.has(e.codigo)) {
+                    mapByCode.set(e.codigo, { ...e });
+                    console.log('    ✅ Agregado al mapa:', e.codigo);
+                } else {
+                    console.log('    ⚠️ Expediente ya existe en mapa:', e.codigo);
+                }
+            };
+
+            console.log('📝 Procesando expedientes creados...');
+            (createdList || []).forEach(upsert);
+            console.log('📝 Procesando expedientes ejecutivo...');
+            (execList || []).forEach(upsert);
+            console.log('📝 Procesando expedientes compras...');
+            (compList || []).forEach(upsert);
+            console.log('📝 Procesando expedientes finalizados...');
+            (finList || []).forEach(upsert);
+
+            console.log('🗺️ Mapa final:', Array.from(mapByCode.entries()));
+            console.log('📊 Total de expedientes en mapa:', mapByCode.size);
+
+            // Compute status: FINALIZADO if in finList; else PENDIENTE
+            const finalizadoSet = new Set((finList || []).map(e => e.codigo));
+            console.log('🏁 Set de finalizados:', Array.from(finalizadoSet));
+
+            const expedientesCreados = document.getElementById('expedientesCreados');
+            const emptyExpedientes = document.getElementById('emptyExpedientes');
+            
+            console.log('🎯 Elementos DOM encontrados:');
+            console.log('  - expedientesCreados:', expedientesCreados);
+            console.log('  - emptyExpedientes:', emptyExpedientes);
+            
+            // Clear current list items
+            const itemsToRemove = expedientesCreados.querySelectorAll('.expediente-item');
+            console.log('🗑️ Elementos a eliminar:', itemsToRemove.length);
+            Array.from(itemsToRemove).forEach(n => n.remove());
+
+            const entries = Array.from(mapByCode.values());
+            console.log('📋 Entradas a renderizar:', entries);
+            
+            if (!entries.length) {
+                console.log('⚠️ No hay entradas para renderizar, mostrando estado vacío');
+                if (emptyExpedientes) emptyExpedientes.style.display = 'block';
+                return;
+            }
+            
+            console.log('✅ Hay entradas para renderizar, ocultando estado vacío');
+            if (emptyExpedientes) emptyExpedientes.style.display = 'none';
+            console.log('🎨 Iniciando renderizado de expedientes...');
+            entries.forEach((data, index) => {
+                console.log(`  🎯 Renderizando expediente ${index + 1}/${entries.length}:`, data.codigo);
+                
+                const item = document.createElement('div');
+                item.className = 'expediente-item';
+                const isFinal = finalizadoSet.has(data.codigo);
+                console.log(`    📊 Estado: ${isFinal ? 'FINALIZADO' : 'PENDIENTE'}`);
+                
+                item.innerHTML = `
+                    <div class="status-badge ${isFinal ? 'status-finalizado' : 'status-pendiente'}">${isFinal ? 'FINALIZADO' : 'PENDIENTE'}</div>
+                    <div class="expediente-header">${data.codigo} - ${data.detalle || 'Sin descripción'}</div>
+                    <div class="expediente-details">
+                        <strong>📅 ${formatDateEs(new Date(data.fechaIngreso || new Date()))}</strong><br>
+                        <strong>Código:</strong> ${data.codigo}<br>
+                        <strong>Número:</strong> ${data.numero || 'N/A'}/${data.anio || '2025'}<br>
+                        <strong>Corresponde:</strong> ${data.corresponde || 'N/A'}<br>
+                        <strong>Derivado a:</strong> ${data.derivado || 'N/A'}<br>
+                        <strong>Días de trámite:</strong> ${data.diasTramite || 0} días
+                        ${data.observacion ? '<br><strong>Observación:</strong> ' + data.observacion : ''}
+                    </div>
+                    ${!isFinal ? `
+                    <div class="item-actions">
+                        <label style="display:flex;align-items:center;gap:0.4rem;color:var(--gray-700);">
+                            <input type="checkbox" class="select-checkbox" /> Seleccionar
+                        </label>
+                        <select class="inline-select" aria-label="Mover a" disabled>
+                            <option value="">Enviar a...</option>
+                            <option value="ejecutivo">Parque Automotor Ejecutivo</option>
+                            <option value="compra">Compras</option>
+                        </select>
+                        <button class="send-btn" disabled>Enviar</button>
+                        <button class="edit-btn" onclick="editExpediente('${data.codigo}')" title="Modificar expediente">✏️</button>
+                        <button class="delete-btn" onclick="deleteExpedienteCreado('${data.codigo}')" title="Eliminar expediente">🗑️</button>
+                    </div>
+                    ` : `
+                    <div class="item-actions" style="opacity: 0.6; pointer-events: none;">
+                    </div>
+                    `}
+                `;
+                
+                console.log(`    🔧 Agregando handlers para:`, data.codigo);
+                attachExpedienteItemHandlers(item, data);
+                
+                console.log(`    📍 Insertando en DOM:`, data.codigo);
+                expedientesCreados.insertBefore(item, emptyExpedientes);
+                console.log(`    ✅ Expediente ${data.codigo} renderizado exitosamente`);
+            });
+            
+            console.log('🎉 Renderizado completado. Total de expedientes en DOM:', expedientesCreados.querySelectorAll('.expediente-item').length);
+        }
+
+        function buildFinalizadoItem(data) {
+            const back = document.createElement('div');
+            back.className = 'expediente-item';
+            back.innerHTML = `
+                <div class="status-badge status-finalizado">FINALIZADO</div>
+                <div class="expediente-header">${data.codigo} - ${data.detalle || 'Sin descripción'}</div>
+                <div class="expediente-details">
+                    <strong>📅 ${formatDateEs(new Date(data.fechaIngreso))}</strong><br>
+                    <strong>Código:</strong> ${data.codigo}<br>
+                    <strong>Número:</strong> ${data.numero || 'N/A'}/${data.anio || '2025'}<br>
+                    <strong>Corresponde:</strong> ${data.corresponde || 'N/A'}<br>
+                    <strong>Derivado a:</strong> ${data.derivado || 'N/A'}<br>
+                    <strong>Días de trámite:</strong> ${data.diasTramite || 0} días
+                    ${data.observacion ? '<br><strong>Observación:</strong> ' + data.observacion : ''}
+                </div>
+            `;
+            return back;
+        }
+
+        // renderStoredFinalizados ya no se usa, centralizamos en renderAllInCreated
+
+        function ensureCompraContainer() {
+            let compraContainer = document.getElementById('compraContainer');
+            if (!compraContainer) {
+                compraContainer = document.createElement('div');
+                compraContainer.id = 'compraContainer';
+                const compraSection = document.querySelector('.section-card:nth-of-type(3) .section-content');
+                compraSection.appendChild(compraContainer);
+            }
+            return compraContainer;
+        }
+
+        function renderStoredEjecutivo() {
+            const list = getStoredEjecutivo();
+            if (!Array.isArray(list) || list.length === 0) return;
+            const execSection = document.getElementById('executiveSection');
+            const emptyExec = document.getElementById('emptyExecutive');
+            if (emptyExec) emptyExec.style.display = 'none';
+            list.forEach(d => {
+                const el = buildExecutiveItemSimple(d);
+                execSection.insertBefore(el, emptyExec);
+            });
+        }
+
+        function renderStoredCompras() {
+            const list = getStoredCompras();
+            if (!Array.isArray(list) || list.length === 0) return;
+            const compraContainer = ensureCompraContainer();
+            list.forEach(d => compraContainer.appendChild(buildCompraItemSimple(d)));
+        }
+
+        // Función para formatear fecha en español
+        function formatDateEs(date) {
+            return date.toLocaleDateString('es-ES');
+        }
+
+        // Función para calcular días de trámite
+        function calculateDays(startDate, endDate = new Date()) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays;
+        }
+
+        // Función para actualizar estadísticas
+        function updateStats() {
+            const expedientesCreados = document.querySelectorAll('#expedientesCreados .expediente-item').length;
+            const executiveItems = document.querySelectorAll('#executiveSection .executive-item').length;
+            const totalExpedientes = expedientesCreados + executiveItems;
+            const finalizados = document.querySelectorAll('.status-finalizado').length;
+            const pendientes = document.querySelectorAll('.status-pendiente').length;
+
+            const totalEl = document.getElementById('totalExpedientes');
+            const finalizadosEl = document.getElementById('finalizados');
+            const pendientesEl = document.getElementById('pendientes');
+            
+            if (totalEl) totalEl.textContent = String(totalExpedientes);
+            if (finalizadosEl) finalizadosEl.textContent = String(finalizados);
+            if (pendientesEl) pendientesEl.textContent = String(pendientes);
+        }
+
+        // Función para crear item de expediente
+        function createExpedienteItem(data) {
+            const item = document.createElement('div');
+            item.className = 'expediente-item';
+            item.dataset.codigo = data.codigo;
+            
+            const fechaIngreso = new Date(data.fechaIngreso);
+            const diasTramite = data.diasTramite || calculateDays(fechaIngreso);
+            
+            item.innerHTML = `
+                <div class="status-badge status-pendiente">PENDIENTE</div>
+                <div class="expediente-header">${data.codigo} - ${data.detalle || 'Sin descripción'}</div>
+                <div class="expediente-details">
+                    <strong>📅 ${formatDateEs(fechaIngreso)}</strong><br>
+                    <strong>Código:</strong> ${data.codigo}<br>
+                    <strong>Número:</strong> ${data.numero || 'N/A'}/${data.anio || '2025'}<br>
+                    <strong>Corresponde:</strong> ${data.corresponde || 'N/A'}<br>
+                    <strong>Derivado a:</strong> ${data.derivado || 'N/A'}<br>
+                    <strong>Días de trámite:</strong> ${diasTramite} días
+                    ${data.observacion ? '<br><strong>Observación:</strong> ' + data.observacion : ''}
+                </div>
+                <div class="item-actions">
+                    <label style="display:flex;align-items:center;gap:0.4rem;color:var(--gray-700);">
+                        <input type="checkbox" class="select-checkbox" /> Seleccionar
+                    </label>
+                    <select class="inline-select" aria-label="Mover a" disabled>
+                        <option value="">Enviar a...</option>
+                        <option value="ejecutivo">Parque Automotor Ejecutivo</option>
+                        <option value="compra">Compras</option>
+                    </select>
+                    <button class="send-btn" disabled>Enviar</button>
+                </div>
+            `;
+            attachExpedienteItemHandlers(item, data);
+            
+            return item;
+        }
+
+        function attachExpedienteItemHandlers(item, data) {
+            // Verificar si el expediente está finalizado
+            const isFinalizado = item.querySelector('.status-badge')?.textContent === 'FINALIZADO';
+            
+            // Si está finalizado, no agregar handlers
+            if (isFinalizado) {
+                return;
+            }
+            
+            const checkbox = item.querySelector('.select-checkbox');
+            const select = item.querySelector('.inline-select');
+            const sendBtn = item.querySelector('.send-btn');
+            
+            // Si no hay elementos de acción, no continuar
+            if (!checkbox || !select || !sendBtn) {
+                return;
+            }
+            
+            // Preselección según tipo de expediente
+            const tipo = (data.tipo || '').toString().toLowerCase();
+            if (tipo.includes('ejecutivo')) {
+                select.value = 'ejecutivo';
+            } else if (tipo.includes('compra')) {
+                select.value = 'compra';
+            }
+            
+            checkbox.addEventListener('change', () => {
+                const enabled = checkbox.checked;
+                select.disabled = !enabled;
+                sendBtn.disabled = !enabled;
+            });
+            
+            sendBtn.addEventListener('click', () => {
+                let destino = select.value;
+                if (!destino) {
+                    // Usar mapeo por tipo si no eligió manualmente
+                    if (tipo.includes('ejecutivo')) destino = 'ejecutivo';
+                    if (tipo.includes('compra')) destino = 'compra';
+                }
+                if (!destino) {
+                    alert('Seleccione un destino (Ejecutivo o Compras).');
+                    return;
+                }
+                moveExpediente(data, destino, item);
+                checkbox.checked = false;
+                select.value = '';
+                select.disabled = true;
+                sendBtn.disabled = true;
+            });
+        }
+
+        function buildExecutiveItemSimple(data) {
+            const newItem = document.createElement('div');
+            newItem.className = 'executive-item';
+            newItem.dataset.codigo = data.codigo;
+            newItem.innerHTML = `
+                <div class="status-badge status-pendiente">PENDIENTE</div>
+                <div class="expediente-header">${data.codigo} - ${data.detalle || ''}</div>
+                <div class="expediente-details">
+                    <strong>📅 ${formatDateEs(new Date(data.fechaIngreso))}</strong><br>
+                    <strong>Código:</strong> ${data.codigo}<br>
+                    <strong>Número:</strong> ${data.numero || 'N/A'}/${data.anio || '2025'}<br>
+                    <strong>Corresponde:</strong> ${data.corresponde || 'N/A'}<br>
+                    <strong>Derivado a:</strong> ${data.derivado || 'N/A'}<br>
+                    <strong>Días de trámite:</strong> ${data.diasTramite || 0} días
+                </div>
+                <div class="item-actions">
+                    <label style="display:flex;align-items:center;gap:0.4rem;color:var(--gray-700);">
+                        <input type="checkbox" class="select-checkbox" /> Seleccionar
+                    </label>
+                    <button class="send-back-btn" disabled>Enviar a Expedientes Creados</button>
+                    <button class="delete-btn" onclick="deleteExecutive(this)" title="Eliminar expediente">🗑️</button>
+                </div>
+            `;
+            attachReturnHandler(newItem, data);
+            return newItem;
+        }
+
+        function buildCompraItemSimple(data) {
+            const newItem = document.createElement('div');
+            newItem.className = 'executive-item';
+            newItem.dataset.codigo = data.codigo;
+            newItem.innerHTML = `
+                <div class="status-badge status-pendiente">PENDIENTE</div>
+                <div class="expediente-header">${data.codigo} - ${data.detalle || ''}</div>
+                <div class="expediente-details">
+                    <strong>📅 ${formatDateEs(new Date(data.fechaIngreso))}</strong><br>
+                    <strong>Código:</strong> ${data.codigo}<br>
+                    <strong>Número:</strong> ${data.numero || 'N/A'}/${data.anio || '2025'}<br>
+                    <strong>Corresponde:</strong> ${data.corresponde || 'N/A'}<br>
+                    <strong>Derivado a:</strong> ${data.derivado || 'N/A'}<br>
+                    <strong>Días de trámite:</strong> ${data.diasTramite || 0} días
+                </div>
+                <div class="item-actions">
+                    <label style="display:flex;align-items:center;gap:0.4rem;color:var(--gray-700);">
+                        <input type="checkbox" class="select-checkbox" /> Seleccionar
+                    </label>
+                    <button class="send-back-btn" disabled>Enviar a Expedientes Creados</button>
+                    <button class="delete-btn" onclick="deleteExecutive(this)" title="Eliminar expediente">🗑️</button>
+                </div>
+            `;
+            attachReturnHandler(newItem, data);
+            return newItem;
+        }
+
+        function moveExpediente(data, destino, itemEl) {
+            // Verificar que el expediente no esté finalizado
+            if (itemEl && itemEl.querySelector('.status-badge')?.textContent === 'FINALIZADO') {
+                alert('❌ No se puede mover un expediente FINALIZADO');
+                return;
+            }
+            
+            // Remover de expedientes creados (y storage) si va a otro destino
+            const expedientesCreados = document.getElementById('expedientesCreados');
+            const emptyExpedientes = document.getElementById('emptyExpedientes');
+            if (itemEl && itemEl.parentElement === expedientesCreados) {
+                itemEl.remove();
+                const stored = getStoredCreated().filter(x => x.codigo !== data.codigo);
+                setStoredCreated(stored);
+                if (expedientesCreados.querySelectorAll('.expediente-item').length === 0 && emptyExpedientes) {
+                    emptyExpedientes.style.display = 'block';
+                }
+            }
+
+            if (destino === 'ejecutivo') {
+                const execSection = document.getElementById('executiveSection');
+                const emptyExec = document.getElementById('emptyExecutive');
+                if (emptyExec) emptyExec.style.display = 'none';
+                execSection.insertBefore(buildExecutiveItemSimple(data), emptyExec);
+                const ejList = getStoredEjecutivo();
+                ejList.push(data);
+                setStoredEjecutivo(ejList);
+            } else if (destino === 'compra') {
+                // Reusar contenedor de compras: agregar debajo del preview
+                let compraContainer = document.getElementById('compraContainer');
+                if (!compraContainer) {
+                    compraContainer = document.createElement('div');
+                    compraContainer.id = 'compraContainer';
+                    const compraSection = document.querySelector('.section-card:nth-of-type(3) .section-content');
+                    compraSection.appendChild(compraContainer);
+                }
+                compraContainer.prepend(buildCompraItemSimple(data));
+                const cList = getStoredCompras();
+                cList.push(data);
+                setStoredCompras(cList);
+            }
+            // Activar alerta si pasan 2 días sin finalizar
+            scheduleTwoDayAlert();
+
+            updateStats();
+        }
+
+        function attachReturnHandler(wrapper, data) {
+            // Casilla para volver a "Expedientes Creados" como FINALIZADO
+            const checkbox = wrapper.querySelector('.select-checkbox');
+            const sendBackBtn = wrapper.querySelector('.send-back-btn');
+            if (checkbox && sendBackBtn) {
+                checkbox.addEventListener('change', () => {
+                    sendBackBtn.disabled = !checkbox.checked;
+                });
+                sendBackBtn.addEventListener('click', () => {
+                    if (!checkbox.checked) return;
+                    const created = document.getElementById('expedientesCreados');
+                    const empty = document.getElementById('emptyExpedientes');
+                    if (empty) empty.style.display = 'none';
+                    const back = buildFinalizadoItem(data);
+                    created.insertBefore(back, empty);
+                    setStoredFinalizados([...getStoredFinalizados(), data]);
+                    const inExec = wrapper.closest('#executiveSection');
+                    if (inExec) setStoredEjecutivo(getStoredEjecutivo().filter(x => x.codigo !== data.codigo));
+                    const compraCont = document.getElementById('compraContainer');
+                    if (compraCont && compraCont.contains(wrapper)) {
+                        setStoredCompras(getStoredCompras().filter(x => x.codigo !== data.codigo));
+                    }
+                    wrapper.remove();
+                    updateStats();
+                });
+            }
+            const badge = wrapper.querySelector('.status-badge');
+            if (badge) badge.title = 'Pendiente: se volverá rojo si pasan 2 días sin finalizar';
+        }
+
+        function scheduleTwoDayAlert() {
+            // Recorre todos los pendientes (creados, ejecutivo, compra) y marca alerta si >2 días
+            const now = new Date();
+            document.querySelectorAll('.status-badge.status-pendiente').forEach(badge => {
+                const wrapper = badge.closest('.expediente-item, .executive-item');
+                if (!wrapper) return;
+                const dateText = (wrapper.querySelector('.expediente-details strong')?.textContent || '').replace('📅', '').trim();
+                // intentar parsear DD/MM/YYYY o similar
+                let parts = dateText.split('/').map(x => x.trim());
+                let parsed = null;
+                if (parts.length === 3) {
+                    const [dd, mm, yyyy] = parts;
+                    parsed = new Date(parseInt(yyyy,10), parseInt(mm,10)-1, parseInt(dd,10));
+                } else {
+                    parsed = new Date(dateText);
+                }
+                if (parsed instanceof Date && !isNaN(parsed.getTime())) {
+                    const diffDays = Math.ceil(Math.abs(now - parsed) / (1000*60*60*24));
+                    if (diffDays > 2) {
+                        badge.classList.add('status-alert');
+                        badge.textContent = 'ALERTA (PENDIENTE)';
+                    }
+                }
+            });
+        }
+
+        // FILTRO GLOBAL (APLICA A LAS TRES SECCIONES)
+        function applyGlobalFilter(mode) {
+            // mode: 'TODOS' | 'PENDIENTE' | 'CONFIRMADOS'
+            const showAll = mode === 'TODOS';
+            const showPend = mode === 'PENDIENTE';
+            const showConf = mode === 'CONFIRMADOS';
+            const allCards = document.querySelectorAll('#expedientesCreados .expediente-item, #executiveSection .executive-item, #compraContainer .executive-item');
+            allCards.forEach(card => {
+                const isPend = !!card.querySelector('.status-badge.status-pendiente');
+                const isFin = !!card.querySelector('.status-badge.status-finalizado');
+                let visible = true;
+                if (!showAll) {
+                    if (showPend) visible = isPend;
+                    if (showConf) visible = isFin;
+                }
+                card.style.display = visible ? '' : 'none';
+            });
+            // Botones activos
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.filter === mode);
+            });
+        }
+
+        // Función para abrir el formulario
+        function openNewExpedienteForm() {
+            const mainPage = document.getElementById('mainPage');
+            const formPage = document.getElementById('formPage');
+            
+            // Establecer fecha actual por defecto
+            const today = new Date().toISOString().split('T')[0];
+            const fechaIngresoInput = document.querySelector('input[name="fechaIngreso"]');
+            if (fechaIngresoInput) fechaIngresoInput.value = today;
+            
+            // Mostrar formulario
+            formPage.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // Enfocar en el primer campo
+            setTimeout(() => {
+                const firstInput = formPage.querySelector('input[name="codigo"]');
+                if (firstInput) firstInput.focus();
+            }, 100);
+        }
+
+        // Función para cerrar el formulario
+        function closeForm() {
+            const formPage = document.getElementById('formPage');
+            formPage.classList.remove('active');
+            document.body.style.overflow = '';
+            
+            // Limpiar formulario
+            const form = document.getElementById('expedienteForm');
+            if (form) form.reset();
+        }
+
+        // Función para eliminar expediente ejecutivo
+        function deleteExecutive(button) {
+            if (confirm('¿Está seguro de que desea eliminar este expediente?')) {
+                const item = button.closest('.executive-item');
+                if (item) item.remove();
+                if (item && item.dataset && item.dataset.default === 'true') {
+                    localStorage.setItem('hideDefaultExecutive', '1');
+                }
+                
+                const executiveSection = document.getElementById('executiveSection');
+                const items = executiveSection.querySelectorAll('.executive-item');
+                const emptyState = document.getElementById('emptyExecutive');
+                if (items.length === 0 && emptyState) {
+                    emptyState.style.display = 'block';
+                }
+                // Actualizar storage según la sección de la que proviene
+                const codigo = item?.dataset?.codigo;
+                if (codigo) {
+                    if (executiveSection.contains(item)) {
+                        setStoredEjecutivo(getStoredEjecutivo().filter(x => x.codigo !== codigo));
+                    } else {
+                        const compraContainer = document.getElementById('compraContainer');
+                        if (compraContainer && compraContainer.contains(item)) {
+                            setStoredCompras(getStoredCompras().filter(x => x.codigo !== codigo));
+                        }
+                    }
+                }
+                updateStats();
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Render inicial (consolidada por defecto)
+            renderStoredEjecutivo();
+            renderStoredCompras();
+            renderAllInCreated();
+
+            // Ocultar item ejecutivo por defecto si fue eliminado previamente
+            if (localStorage.getItem('hideDefaultExecutive') === '1') {
+                const def = document.querySelector('#executiveSection .executive-item[data-default="true"]');
+                if (def) def.remove();
+                const executiveSection = document.getElementById('executiveSection');
+                const items = executiveSection.querySelectorAll('.executive-item');
+                const emptyState = document.getElementById('emptyExecutive');
+                if (items.length === 0 && emptyState) {
+                    emptyState.style.display = 'block';
+                }
+            }
+
+            updateStats();
+            scheduleTwoDayAlert();
+
+            // Filtro: eventos
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => applyGlobalFilter(btn.dataset.filter));
+            });
+            // Estado inicial: TODOS
+            applyGlobalFilter('TODOS');
+
+            // Render inicial: todos los expedientes en Expedientes Creados
+            renderAllInCreated();
+            
+            // Configurar el formulario
+            const form = document.getElementById('expedienteForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(form);
+                    const data = {};
+                    for (let [key, value] of formData.entries()) {
+                        data[key] = value.toString().trim();
+                    }
+                    
+                    // Validar campos requeridos
+                    if (!data.codigo || !data.fechaIngreso) {
+                        alert('Por favor complete todos los campos obligatorios.');
+                        return;
+                    }
+                    
+                    // Crear nuevo expediente
+                    const expedientesCreados = document.getElementById('expedientesCreados');
+                    const emptyExpedientes = document.getElementById('emptyExpedientes');
+                    
+                    if (emptyExpedientes) emptyExpedientes.style.display = 'none';
+                    
+                    const newItem = createExpedienteItem(data);
+                    expedientesCreados.insertBefore(newItem, emptyExpedientes);
+
+                    // Persistir
+                    const stored = getStoredCreated();
+                    stored.push({
+                        codigo: data.codigo,
+                        numero: data.numero || '',
+                        anio: data.anio || '',
+                        corresponde: data.corresponde || '',
+                        derivado: data.derivado || '',
+                        fechaIngreso: data.fechaIngreso,
+                        detalle: data.detalle || '',
+                        observacion: data.observacion || '',
+                        diasTramite: data.diasTramite || ''
+                    });
+                    setStoredCreated(stored);
+                    
+                    // Actualizar estadísticas
+                    renderAllInCreated();
+                    updateStats();
+                    
+                    // Cerrar formulario
+                    closeForm();
+                    
+                    // Mostrar mensaje de éxito
+                    setTimeout(() => {
+                        alert('Expediente creado exitosamente');
+                    }, 300);
+                });
+            }
+            
+            // Cerrar formulario con ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    const formPage = document.getElementById('formPage');
+                    if (formPage && formPage.classList.contains('active')) {
+                        closeForm();
+                    }
+                }
+            });
+            
+            // Efectos visuales
+            document.querySelectorAll('.section-card').forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-4px)';
+                });
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+        });
+
+        // Historia de URL (simulación básica)
+        window.addEventListener('popstate', function() {
+            closeForm();
+        });
+
+        // AUTH BÁSICO (LOCALSTORAGE)
+        function showRegister(){
+            document.getElementById('loginPage').classList.remove('active');
+            document.getElementById('registerPage').classList.add('active');
+        }
+        function showLogin(){
+            document.getElementById('registerPage').classList.remove('active');
+            document.getElementById('loginPage').classList.add('active');
+        }
+        function logout(){
+            localStorage.removeItem('authUser');
+            document.getElementById('mainPage').style.display = 'none';
+            document.getElementById('loginPage').classList.add('active');
+            document.getElementById('registerPage').classList.remove('active');
+        }
+
+        // INIT AUTH EVENTS
+        (function initAuth(){
+            // Crear admin por defecto si no existe
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const adminExists = users.find(u => u.username === '35477889');
+            if (!adminExists) {
+                users.push({
+                    username: '35477889',
+                    dni: '35477889',
+                    nombre: 'ADMIN',
+                    apellido: 'SISTEMA',
+                    password: '35477889',
+                    role: 'ADMIN',
+                    blocked: false
+                });
+                localStorage.setItem('users', JSON.stringify(users));
+                console.log('Admin creado automáticamente');
+            }
+            
+            const auth = JSON.parse(localStorage.getItem('authUser') || 'null');
+            if (auth) {
+                const hasRole = !!(auth.role && auth.role.trim());
+                if (!hasRole) {
+                    document.getElementById('loginPage').classList.remove('active');
+                    document.getElementById('registerPage').classList.remove('active');
+                    const rp = document.getElementById('rolePendingPage');
+                    if (rp) rp.classList.add('active');
+                    document.getElementById('mainPage').style.display = 'none';
+                } else {
+                    document.getElementById('loginPage').classList.remove('active');
+                    document.getElementById('registerPage').classList.remove('active');
+                    document.getElementById('mainPage').style.display = '';
+                    applyRoleUI(auth.role || 'MESA_DE_ENTRADA');
+                }
+            }
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const fd = new FormData(loginForm);
+                    const username = (fd.get('username')||'').toString().trim();
+                    const password = (fd.get('password')||'').toString().trim();
+                    if (!username || !password) return alert('COMPLETE USUARIO (DNI) Y CONTRASEÑA');
+                    const users = JSON.parse(localStorage.getItem('users')||'[]');
+                    const found = users.find(u => (u.username === username || u.dni === username) && u.password === password);
+                    if (!found) {
+                        alert('USUARIO O CONTRASEÑA INCORRECTOS');
+                        return;
+                    }
+                    if (found.blocked) {
+                        alert('CUENTA BLOQUEADA. CONTACTE AL ADMIN.');
+                        return;
+                    }
+                    localStorage.setItem('authUser', JSON.stringify({ username: found.username, dni: found.dni, nombre: found.nombre, apellido: found.apellido, role: (found.role||'').trim() }));
+                    const hasRole = !!((found.role||'').trim());
+                    document.getElementById('loginPage').classList.remove('active');
+                    document.getElementById('registerPage').classList.remove('active');
+                    if (!hasRole) {
+                        const rp = document.getElementById('rolePendingPage');
+                        if (rp) rp.classList.add('active');
+                        document.getElementById('mainPage').style.display = 'none';
+                    } else {
+                        document.getElementById('mainPage').style.display = '';
+                        applyRoleUI(found.role);
+                    }
+                });
+            }
+            const registerForm = document.getElementById('registerForm');
+            if (registerForm) {
+                registerForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const fd = new FormData(registerForm);
+                    const pw = (fd.get('password')||'').toString();
+                    const cpw = (fd.get('confirmPassword')||'').toString();
+                    const dni = (fd.get('dni')||'').toString().trim();
+                    if (!/^\d{7,9}$/.test(dni)) return alert('DNI INVÁLIDO. USE SOLO NÚMEROS (7 A 9 DÍGITOS)');
+                    if (pw !== cpw) return alert('LAS CONTRASEÑAS NO COINCIDEN');
+                    // Guardar usuario con rol por defecto
+                    const user = { username: dni, dni, nombre: (fd.get('nombre')||'').toString(), apellido: (fd.get('apellido')||'').toString(), password: pw, role: 'PERSONAL' };
+                    const users = JSON.parse(localStorage.getItem('users')||'[]');
+                    if (users.find(u => u.username === user.username)) {
+                        return alert('YA EXISTE UN USUARIO CON ESE DNI');
+                    }
+                    users.push(user);
+                    localStorage.setItem('users', JSON.stringify(users));
+                    alert('USUARIO REGISTRADO');
+                    showLogin();
+                });
+                // Autocompletar USERNAME con DNI
+                const dniInput = document.querySelector('#registerForm [name="dni"]');
+                const userInput = document.querySelector('#registerForm [name="username"]');
+                if (dniInput && userInput) {
+                    const sync = () => { userInput.value = dniInput.value.trim(); };
+                    dniInput.addEventListener('input', sync);
+                    dniInput.addEventListener('change', sync);
+                }
+            }
+        })();
+
+        function applyRoleUI(role){
+            console.log('🔐 Aplicando rol:', role);
+            
+            // Botón de agregar expediente
+            const addBtn = document.querySelector('.add-btn');
+            if (addBtn) {
+                if (role === 'PERSONAL') {
+                    addBtn.style.display = 'none';
+                } else {
+                    addBtn.style.display = '';
+                }
+            }
+            
+            // Configuración de pestañas según rol
+            const configTabs = document.querySelectorAll('#configTabs .tab-btn');
+            if (configTabs.length > 0) {
+                if (role === 'ADMIN') {
+                    // ADMIN: ve todas las pestañas
+                    configTabs.forEach(tab => tab.style.display = '');
+                } else {
+                    // MESA_DE_ENTRADA y PERSONAL: solo ven USUARIO
+                    configTabs.forEach(tab => {
+                        if (tab.dataset.tab === 'usuario') {
+                            tab.style.display = '';
+                        } else {
+                            tab.style.display = 'none';
+                        }
+                    });
+                }
+            }
+        }
+
+        // Función para refrescar expedientes manualmente
+        function refreshExpedientes() {
+            console.log('🔄 Refrescando expedientes...');
+            renderAllInCreated();
+            alert('Expedientes actualizados');
+        }
+
+        // Función para verificar si hay expedientes nuevos cada 5 segundos
+        function startExpedienteWatcher() {
+            setInterval(() => {
+                const currentCount = getStoredCreated().length + getStoredEjecutivo().length + getStoredCompras().length + getStoredFinalizados().length;
+                if (window.lastExpedienteCount !== currentCount) {
+                    console.log('📝 Cambio detectado en expedientes, actualizando...');
+                    window.lastExpedienteCount = currentCount;
+                    renderAllInCreated();
+                }
+            }, 5000);
+        }
+
+        // Función para eliminar expediente de cualquier sección
+        function deleteExpedienteCreado(codigo) {
+            if (confirm(`¿Estás seguro de que quieres eliminar el expediente ${codigo}?`)) {
+                console.log('🗑️ Eliminando expediente:', codigo);
+                
+                // Buscar y eliminar de todas las listas
+                let eliminado = false;
+                
+                // Eliminar de creados
+                const expedientesCreados = getStoredCreated().filter(e => e.codigo !== codigo);
+                if (expedientesCreados.length !== getStoredCreated().length) {
+                    setStoredCreated(expedientesCreados);
+                    eliminado = true;
+                    console.log('✅ Eliminado de Expedientes Creados');
+                }
+                
+                // Eliminar de ejecutivo
+                const expedientesEjecutivo = getStoredEjecutivo().filter(e => e.codigo !== codigo);
+                if (expedientesEjecutivo.length !== getStoredEjecutivo().length) {
+                    setStoredEjecutivo(expedientesEjecutivo);
+                    eliminado = true;
+                    console.log('✅ Eliminado de Parque Automotor Ejecutivo');
+                }
+                
+                // Eliminar de compras
+                const expedientesCompras = getStoredCompras().filter(e => e.codigo !== codigo);
+                if (expedientesCompras.length !== getStoredCompras().length) {
+                    setStoredCompras(expedientesCompras);
+                    eliminado = true;
+                    console.log('✅ Eliminado de Centro de Compras');
+                }
+                
+                // Eliminar de finalizados
+                const expedientesFinalizados = getStoredFinalizados().filter(e => e.codigo !== codigo);
+                if (expedientesFinalizados.length !== getStoredFinalizados().length) {
+                    setStoredFinalizados(expedientesFinalizados);
+                    eliminado = true;
+                    console.log('✅ Eliminado de Finalizados');
+                }
+                
+                if (eliminado) {
+                    renderAllInCreated();
+                    alert('Expediente eliminado exitosamente');
+                } else {
+                    alert('Expediente no encontrado');
+                }
+            }
+        }
+
+        // Función para editar expediente
+        function editExpediente(codigo) {
+            console.log('✏️ Editando expediente:', codigo);
+            
+            // Buscar en todas las listas, no solo en creados
+            let expediente = getStoredCreated().find(e => e.codigo === codigo);
+            if (!expediente) {
+                expediente = getStoredEjecutivo().find(e => e.codigo === codigo);
+            }
+            if (!expediente) {
+                expediente = getStoredCompras().find(e => e.codigo === codigo);
+            }
+            if (!expediente) {
+                expediente = getStoredFinalizados().find(e => e.codigo === codigo);
+            }
+            
+            if (expediente) {
+                console.log('📝 Expediente encontrado:', expediente);
+                
+                // Crear URL con todos los datos del expediente
+                const params = new URLSearchParams();
+                Object.keys(expediente).forEach(key => {
+                    if (expediente[key] !== null && expediente[key] !== undefined) {
+                        params.append(key, expediente[key]);
+                    }
+                });
+                
+                const url = `/nuevo-expediente/?${params.toString()}`;
+                console.log('🔗 URL de edición:', url);
+                
+                // Redirigir a la página de edición
+                window.location.href = url;
+            } else {
+                console.error('❌ Expediente no encontrado en ninguna lista:', codigo);
+                alert('Expediente no encontrado');
+            }
+        }
+
+        // Función para debug de expedientes
+        function debugExpedientes() {
+            console.log('🐛 DEBUG EXPEDIENTES INICIADO');
+            console.log('================================');
+            
+            // Verificar localStorage
+            console.log('📦 localStorage completo:');
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                console.log(`  ${key}:`, value);
+            }
+            
+            // Verificar funciones de storage
+            console.log('🔍 Funciones de storage:');
+            console.log('  - getStoredCreated():', getStoredCreated());
+            console.log('  - getStoredEjecutivo():', getStoredEjecutivo());
+            console.log('  - getStoredCompras():', getStoredCompras());
+            console.log('  - getStoredFinalizados():', getStoredFinalizados());
+            
+            // Verificar DOM
+            console.log('🎯 Estado del DOM:');
+            const expedientesCreados = document.getElementById('expedientesCreados');
+            const emptyExpedientes = document.getElementById('emptyExpedientes');
+            console.log('  - expedientesCreados:', expedientesCreados);
+            console.log('  - emptyExpedientes:', emptyExpedientes);
+            console.log('  - Elementos .expediente-item:', expedientesCreados?.querySelectorAll('.expediente-item').length || 0);
+            
+            // Forzar renderizado
+            console.log('🔄 Forzando renderizado...');
+            renderAllInCreated();
+            
+            alert('Debug completado. Revisa la consola del navegador (F12)');
+        }
+
+        // Función para buscar expedientes por fecha
+        function buscarPorFecha() {
+            const fechaDesde = document.getElementById('fechaDesde').value;
+            const fechaHasta = document.getElementById('fechaHasta').value;
+            
+            if (!fechaDesde && !fechaHasta) {
+                alert('Por favor selecciona al menos una fecha (DESDE o HASTA)');
+                return;
+            }
+            
+            console.log('🔍 Buscando expedientes por fecha:', { fechaDesde, fechaHasta });
+            
+            // Obtener todos los expedientes
+            const todosExpedientes = [
+                ...getStoredCreated(),
+                ...getStoredEjecutivo(),
+                ...getStoredCompras(),
+                ...getStoredFinalizados()
+            ];
+            
+            // Filtrar por fecha
+            const expedientesFiltrados = todosExpedientes.filter(exp => {
+                const fechaExpediente = new Date(exp.fechaIngreso || exp.fechaCreacion);
+                
+                if (fechaDesde && fechaHasta) {
+                    const desde = new Date(fechaDesde);
+                    const hasta = new Date(fechaHasta);
+                    return fechaExpediente >= desde && fechaExpediente <= hasta;
+                } else if (fechaDesde) {
+                    const desde = new Date(fechaDesde);
+                    return fechaExpediente >= desde;
+                } else if (fechaHasta) {
+                    const hasta = new Date(fechaHasta);
+                    return fechaExpediente <= hasta;
+                }
+                
+                return true;
+            });
+            
+            console.log('📊 Expedientes encontrados:', expedientesFiltrados.length);
+            
+            // Renderizar solo los expedientes filtrados
+            renderExpedientesFiltrados(expedientesFiltrados);
+            
+            // Mostrar resumen
+            const mensaje = `Búsqueda completada: ${expedientesFiltrados.length} expedientes encontrados`;
+            if (fechaDesde && fechaHasta) {
+                mensaje += ` entre ${fechaDesde} y ${fechaHasta}`;
+            } else if (fechaDesde) {
+                mensaje += ` desde ${fechaDesde}`;
+            } else if (fechaHasta) {
+                mensaje += ` hasta ${fechaHasta}`;
+            }
+            
+            alert(mensaje);
+        }
+
+        // Función para renderizar expedientes filtrados
+        function renderExpedientesFiltrados(expedientes) {
+            const expedientesCreados = document.getElementById('expedientesCreados');
+            const emptyExpedientes = document.getElementById('emptyExpedientes');
+            
+            // Limpiar lista actual
+            Array.from(expedientesCreados.querySelectorAll('.expediente-item')).forEach(n => n.remove());
+            
+            if (!expedientes.length) {
+                if (emptyExpedientes) {
+                    emptyExpedientes.style.display = 'block';
+                    emptyExpedientes.innerHTML = `
+                        <div class="empty-icon">🔍</div>
+                        <p>No se encontraron expedientes en el rango de fechas seleccionado</p>
+                    `;
+                }
+                return;
+            }
+            
+            if (emptyExpedientes) emptyExpedientes.style.display = 'none';
+            
+            // Crear mapa para evitar duplicados
+            const mapByCode = new Map();
+            expedientes.forEach(exp => {
+                if (!mapByCode.has(exp.codigo)) {
+                    mapByCode.set(exp.codigo, exp);
+                }
+            });
+            
+            // Renderizar expedientes filtrados
+            const finalizadoSet = new Set(getStoredFinalizados().map(e => e.codigo));
+            
+            Array.from(mapByCode.values()).forEach(data => {
+                const item = document.createElement('div');
+                item.className = 'expediente-item';
+                const isFinal = finalizadoSet.has(data.codigo);
+                
+                item.innerHTML = `
+                    <div class="status-badge ${isFinal ? 'status-finalizado' : 'status-pendiente'}">${isFinal ? 'FINALIZADO' : 'PENDIENTE'}</div>
+                    <div class="expediente-header">${data.codigo} - ${data.detalle || 'Sin descripción'}</div>
+                    <div class="expediente-details">
+                        <strong>📅 ${formatDateEs(new Date(data.fechaIngreso || data.fechaCreacion))}</strong><br>
+                        <strong>Código:</strong> ${data.codigo}<br>
+                        <strong>Número:</strong> ${data.numero || 'N/A'}/${data.anio || '2025'}<br>
+                        <strong>Corresponde:</strong> ${data.corresponde || 'N/A'}<br>
+                        <strong>Derivado a:</strong> ${data.derivado || 'N/A'}<br>
+                        <strong>Días de trámite:</strong> ${data.diasTramite || 0} días
+                        ${data.observacion ? '<br><strong>Observación:</strong> ' + data.observacion : ''}
+                    </div>
+                    ${!isFinal ? `
+                    <div class="item-actions">
+                        <label style="display:flex;align-items:center;gap:0.4rem;color:var(--gray-700);">
+                            <input type="checkbox" class="select-checkbox" /> Seleccionar
+                        </label>
+                        <select class="inline-select" aria-label="Mover a" disabled>
+                            <option value="">Enviar a...</option>
+                            <option value="ejecutivo">Parque Automotor Ejecutivo</option>
+                            <option value="compra">Compras</option>
+                        </select>
+                        <button class="send-btn" disabled>Enviar</button>
+                        <button class="edit-btn" onclick="editExpediente('${data.codigo}')" title="Modificar expediente">✏️</button>
+                        <button class="delete-btn" onclick="deleteExpedienteCreado('${data.codigo}')" title="Eliminar expediente">🗑️</button>
+                    </div>
+                    ` : `
+                    <div class="item-actions" style="opacity: 0.6; pointer-events: none;">
+                    </div>
+                    `}
+                `;
+                
+                attachExpedienteItemHandlers(item, data);
+                expedientesCreados.insertBefore(item, emptyExpedientes);
+            });
+        }
+
+        // Función para limpiar búsqueda y mostrar todos los expedientes
+        function limpiarBusqueda() {
+            document.getElementById('fechaDesde').value = '';
+            document.getElementById('fechaHasta').value = '';
+            renderAllInCreated();
+            alert('Búsqueda limpiada. Mostrando todos los expedientes.');
+        }
+
+
+
+        // FORZAR CREACIÓN DE USUARIOS DE PRUEBA
+        (function() {
+            console.log('Creando usuarios de prueba...');
+            
+            // Solo crear si no existen
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            
+            // Admin
+            if (!users.find(u => u.username === '35477889')) {
+                users.push({
+                    username: '35477889',
+                    dni: '35477889',
+                    nombre: 'ADMIN',
+                    apellido: 'SISTEMA',
+                    password: '35477889',
+                    role: 'ADMIN',
+                    blocked: false
+                });
+                console.log('✅ Admin creado');
+            }
+            
+            // Mesa de Entrada
+            if (!users.find(u => u.username === '12345678')) {
+                users.push({
+                    username: '12345678',
+                    dni: '12345678',
+                    nombre: 'MESA',
+                    apellido: 'ENTRADA',
+                    password: '12345678',
+                    role: 'MESA_DE_ENTRADA',
+                    blocked: false
+                });
+                console.log('✅ Mesa de Entrada creado');
+            }
+            
+            // Personal
+            if (!users.find(u => u.username === '87654321')) {
+                users.push({
+                    username: '87654321',
+                    dni: '87654321',
+                    nombre: 'PERSONAL',
+                    apellido: 'TEST',
+                    password: '87654321',
+                    role: 'PERSONAL',
+                    blocked: false
+                });
+                console.log('✅ Personal creado');
+            }
+            
+            localStorage.setItem('users', JSON.stringify(users));
+            console.log('👥 Usuarios disponibles:', users.map(u => `${u.username} (${u.role})`));
+            
+            // Iniciar watcher automático de expedientes
+            startExpedienteWatcher();
+        })();
+    </script>
+</body>
+</html>
+
+
