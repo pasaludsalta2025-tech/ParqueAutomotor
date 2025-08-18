@@ -1,0 +1,26 @@
+{
+  "name": "parque-automotor",
+  "version": "1.0.0",
+  "description": "Control de Expediente - Parque Automotor",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'Build completado'",
+    "vercel-build": "echo 'Build completado'",
+    "start": "npx http-server . -p 3000 -c-1",
+    "dev": "npx http-server . -p 3001 -c-1"
+  },
+  "keywords": [
+    "parque",
+    "automotor", 
+    "expedientes",
+    "control",
+    "gestion"
+  ],
+  "author": "pasaludsalta2025-tech",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pasaludsalta2025-tech/ParqueAutomotor.git"
+  },
+  "homepage": "https://github.com/pasaludsalta2025-tech/ParqueAutomotor#readme"
+}
