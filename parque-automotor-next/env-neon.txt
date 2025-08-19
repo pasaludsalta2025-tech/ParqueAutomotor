@@ -1,0 +1,14 @@
+# Neon Database Configuration
+DATABASE_URL="postgres://neondb_owner:npg_87HQZiWBDYKt@ep-delicate-water-aeteovgj-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require"
+
+# JWT Secret
+JWT_SECRET="tu-secret-super-seguro-aqui-cambialo-en-produccion"
+
+# Next Auth
+NEXTAUTH_SECRET="tu-nextauth-secret-aqui"
+NEXTAUTH_URL="http://localhost:3000"
+
+# Neon Auth environment variables for Next.js
+NEXT_PUBLIC_STACK_PROJECT_ID=0128dc01-d9f0-4c83-8d89-d1d4c70edd34
+NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY=pck_tqv7a3j0jfjtxw0z40c71s4s2cbp59q8vck1gkb2kqbq0
+STACK_SECRET_SERVER_KEY=ssk_xytbv8dpsx7etcs8p10qvwbynfa749kh0y4a98db052gg

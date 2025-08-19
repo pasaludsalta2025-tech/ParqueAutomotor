@@ -1,0 +1,109 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+/// @seed="npm run seed"
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  dni       String   @unique
+  nombre    String
+  apellido  String
+  password  String
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  expedientesCreados Expediente[] @relation("CreadoPor")
+  expedientesEjecutivo Expediente[] @relation("Ejecutivo")
+  expedientesCompras Expediente[] @relation("Compras")
+  expedientesFinalizados Expediente[] @relation("FinalizadoPor")
+  historialExpedientes HistorialExpediente[] @relation("UsuarioHistorial")
+
+  @@map("users")
+}
+
+model Expediente {
+  id                    String   @id @default(cuid())
+  numeroExpediente      String   @unique
+  fechaCreacion         DateTime @default(now())
+  fechaModificacion     DateTime @updatedAt
+  
+  // Información del vehículo
+  marca                 String?
+  modelo                String?
+  año                   String?
+  color                 String?
+  placa                 String?
+  vin                   String?
+  motor                 String?
+  transmision           String?
+  
+  // Información del expediente
+  estado                String   @default("creado") // creado, en_ejecutivo, en_compras, finalizado
+  prioridad             String   @default("normal") // baja, normal, alta, urgente
+  descripcion           String?
+  observaciones         String?
+  
+  // Campos adicionales del sistema original
+  tipoExpediente        String?
+  departamento          String?
+  responsable           String?
+  fechaLimite           DateTime?
+  costoEstimado         Float?
+  costoReal             Float?
+  
+  // Relaciones
+  creadoPorId           String?
+  creadoPor             User?    @relation("CreadoPor", fields: [creadoPorId], references: [id])
+  
+  ejecutivoId           String?
+  ejecutivo             User?    @relation("Ejecutivo", fields: [ejecutivoId], references: [id])
+  
+  comprasId             String?
+  compras               User?    @relation("Compras", fields: [comprasId], references: [id])
+  
+  finalizadoPorId       String?
+  finalizadoPor         User?    @relation("FinalizadoPor", fields: [finalizadoPorId], references: [id])
+  
+  // Historial de cambios
+  historial             HistorialExpediente[]
+  
+  @@map("expedientes")
+}
+
+model HistorialExpediente {
+  id            String     @id @default(cuid())
+  expedienteId  String
+  expediente    Expediente @relation(fields: [expedienteId], references: [id], onDelete: Cascade)
+  accion        String     // "creado", "modificado", "cambiado_estado", "asignado", etc.
+  descripcion   String?
+  usuarioId     String?
+  usuario       User?      @relation("UsuarioHistorial", fields: [usuarioId], references: [id])
+  fecha         DateTime   @default(now())
+  datosAnteriores Json?
+  datosNuevos   Json?
+  
+  @@map("historial_expedientes")
+}
+
+model Configuracion {
+  id          String   @id @default(cuid())
+  clave       String   @unique
+  valor       String
+  descripcion String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("configuracion")
+}
