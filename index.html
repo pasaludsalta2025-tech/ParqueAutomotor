@@ -1548,51 +1548,13 @@
         function renderAllInCreated() {
             console.log('🚀 INICIANDO renderAllInCreated...');
             
+            // SOLO mostrar expedientes que están en "creados" - no mezclar con otras secciones
             const createdList = getStoredCreated();
-            const execList = getStoredEjecutivo();
-            const compList = getStoredCompras();
             const finList = getStoredFinalizados();
 
             console.log('🔍 DEBUG renderAllInCreated:');
             console.log('  - Creados:', createdList);
-            console.log('  - Ejecutivo:', execList);
-            console.log('  - Compras:', compList);
             console.log('  - Finalizados:', finList);
-            console.log('  - localStorage raw expedientesCreados:', localStorage.getItem('expedientesCreados'));
-            console.log('  - localStorage raw expedientesEjecutivo:', localStorage.getItem('expedientesEjecutivo'));
-            console.log('  - localStorage raw expedientesCompras:', localStorage.getItem('expedientesCompras'));
-            console.log('  - localStorage raw expedientesFinalizados:', localStorage.getItem('expedientesFinalizados'));
-
-            const mapByCode = new Map();
-            const upsert = (e) => { 
-                console.log('  🔄 Procesando expediente:', e);
-                if (!e || !e.codigo) {
-                    console.log('    ❌ Expediente inválido o sin código');
-                    return; 
-                }
-                if (!mapByCode.has(e.codigo)) {
-                    mapByCode.set(e.codigo, { ...e });
-                    console.log('    ✅ Agregado al mapa:', e.codigo);
-                } else {
-                    console.log('    ⚠️ Expediente ya existe en mapa:', e.codigo);
-                }
-            };
-
-            console.log('📝 Procesando expedientes creados...');
-            (createdList || []).forEach(upsert);
-            console.log('📝 Procesando expedientes ejecutivo...');
-            (execList || []).forEach(upsert);
-            console.log('📝 Procesando expedientes compras...');
-            (compList || []).forEach(upsert);
-            console.log('📝 Procesando expedientes finalizados...');
-            (finList || []).forEach(upsert);
-
-            console.log('🗺️ Mapa final:', Array.from(mapByCode.entries()));
-            console.log('📊 Total de expedientes en mapa:', mapByCode.size);
-
-            // Compute status: FINALIZADO if in finList; else PENDIENTE
-            const finalizadoSet = new Set((finList || []).map(e => e.codigo));
-            console.log('🏁 Set de finalizados:', Array.from(finalizadoSet));
 
             const expedientesCreados = document.getElementById('expedientesCreados');
             const emptyExpedientes = document.getElementById('emptyExpedientes');
@@ -1606,25 +1568,32 @@
             console.log('🗑️ Elementos a eliminar:', itemsToRemove.length);
             Array.from(itemsToRemove).forEach(n => n.remove());
 
-            const entries = Array.from(mapByCode.values());
-            console.log('📋 Entradas a renderizar:', entries);
+            // Solo procesar expedientes creados
+            const entries = createdList || [];
+            console.log('📋 Expedientes creados a renderizar:', entries);
             
             if (!entries.length) {
-                console.log('⚠️ No hay entradas para renderizar, mostrando estado vacío');
+                console.log('⚠️ No hay expedientes creados, mostrando estado vacío');
                 if (emptyExpedientes) emptyExpedientes.style.display = 'block';
                 return;
             }
             
-            console.log('✅ Hay entradas para renderizar, ocultando estado vacío');
+            console.log('✅ Hay expedientes creados para renderizar, ocultando estado vacío');
             if (emptyExpedientes) emptyExpedientes.style.display = 'none';
-            console.log('🎨 Iniciando renderizado de expedientes...');
+            
+            // Crear un identificador único que combine código + fecha de creación para evitar conflictos
+            const finalizadoSet = new Set((finList || []).map(e => `${e.codigo}_${e.fechaCreacion}`));
+            console.log('🏁 Set de finalizados:', Array.from(finalizadoSet));
+            
+            console.log('🎨 Iniciando renderizado de expedientes creados...');
             entries.forEach((data, index) => {
                 console.log(`  🎯 Renderizando expediente ${index + 1}/${entries.length}:`, data.codigo);
                 
                 const item = document.createElement('div');
                 item.className = 'expediente-item';
-                const isFinal = finalizadoSet.has(data.codigo);
-                console.log(`    📊 Estado: ${isFinal ? 'FINALIZADO' : 'PENDIENTE'}`);
+                const uniqueId = `${data.codigo}_${data.fechaCreacion}`;
+                const isFinal = finalizadoSet.has(uniqueId);
+                console.log(`    📊 Estado: ${isFinal ? 'FINALIZADO' : 'PENDIENTE'} (ID: ${uniqueId})`);
                 
                 item.innerHTML = `
                     <div class="status-badge ${isFinal ? 'status-finalizado' : 'status-pendiente'}">${isFinal ? 'FINALIZADO' : 'PENDIENTE'}</div>
