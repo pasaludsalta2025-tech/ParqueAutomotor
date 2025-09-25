@@ -95,8 +95,14 @@
               <label class="label">📋 TIPO DE EXPEDIENTE <span class="required">*</span></label>
               <select class="input" name="tipo" required>
                 <option value="">Seleccionar tipo</option>
-                <option value="Parque Automotor Ejecutivo">Parque Automotor Ejecutivo</option>
-                <option value="Compras">Compras</option>
+                <option value="Combustible">Combustible</option>
+                <option value="Seguros">Seguros</option>
+                <option value="Personal">Personal</option>
+                <option value="Reparacion">Reparación</option>
+                <option value="Choferes">Choferes</option>
+                <option value="Patrimonio">Patrimonio</option>
+                <option value="Comisiones">Comisiones</option>
+                <option value="Otros">Otros</option>
               </select>
             </div>
             <div class="group">
@@ -124,7 +130,8 @@
           </div>
           <div class="group" style="margin-top:1rem; max-width:240px;">
             <label class="label">⏳ DÍAS DE TRÁMITE</label>
-            <input class="input" type="number" name="diasTramite" value="0" min="0" />
+            <input class="input" type="number" name="diasTramite" value="0" min="0" readonly style="background-color: #f1f5f9; color: #64748b;" title="Se calcula automáticamente desde la fecha de ingreso" />
+            <small style="color: #64748b; font-size: 0.75rem; margin-top: 0.25rem; display: block;">Se calcula automáticamente por día transcurrido</small>
           </div>
 
           <div class="actions">
@@ -406,6 +413,38 @@
       // Redirigir a inicio
       window.location.href = '/';
     });
+    
+    // Inicializar fecha de hoy y calcular días automáticamente
+    document.addEventListener('DOMContentLoaded', function() {
+      const fechaIngresoInput = document.querySelector('[name="fechaIngreso"]');
+      const diasTramiteInput = document.querySelector('[name="diasTramite"]');
+      
+      // Establecer fecha de hoy si no hay valor
+      if (!fechaIngresoInput.value) {
+        fechaIngresoInput.value = new Date().toISOString().split('T')[0];
+      }
+      
+      // Función para calcular días de trámite
+      function calculateDays() {
+        const fechaIngreso = new Date(fechaIngresoInput.value);
+        const today = new Date();
+        
+        if (fechaIngresoInput.value) {
+          const diffTime = Math.abs(today - fechaIngreso);
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          diasTramiteInput.value = diffDays;
+        } else {
+          diasTramiteInput.value = 0;
+        }
+      }
+      
+      // Actualizar días cuando cambie la fecha
+      fechaIngresoInput.addEventListener('change', calculateDays);
+      
+      // Calcular inicialmente
+      calculateDays();
+    });
+    
   </script>
 </body>
 </html>
