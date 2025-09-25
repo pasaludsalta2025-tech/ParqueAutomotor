@@ -144,7 +144,7 @@
   </div>
 
   <script>
-    function goHome(){ window.location.href = '/'; }
+    function goHome(){ window.location.href = '../index.html'; }
     function getStored(){ try { return JSON.parse(localStorage.getItem('expedientesCreados')||'[]'); } catch { return []; } }
     function setStored(list){ localStorage.setItem('expedientesCreados', JSON.stringify(list)); }
 
@@ -220,6 +220,26 @@
       if (numero && !/^\d{1,6}$/.test(numero)){
         showError(numeroEl, 'Solo números (1 a 6 dígitos).');
         firstErrorEl = firstErrorEl || numeroEl;
+      }
+      
+      // Validar número no duplicado (solo para creación nueva)
+      const urlParams = new URLSearchParams(window.location.search);
+      const isEditing = urlParams.toString() !== '';
+      
+      if (numero && !isEditing) {
+        // Verificar en todas las listas de expedientes
+        const expedientesCreados = getStoredCreated();
+        const expedientesEjecutivo = JSON.parse(localStorage.getItem('expedientesEjecutivo') || '[]');
+        const expedientesCompras = JSON.parse(localStorage.getItem('expedientesCompras') || '[]');
+        const expedientesFinalizados = JSON.parse(localStorage.getItem('expedientesFinalizados') || '[]');
+        
+        const todosList = [...expedientesCreados, ...expedientesEjecutivo, ...expedientesCompras, ...expedientesFinalizados];
+        const numeroExiste = todosList.some(exp => exp.numero === numero);
+        
+        if (numeroExiste) {
+          showError(numeroEl, `El número ${numero} ya existe. Use un número diferente.`);
+          firstErrorEl = firstErrorEl || numeroEl;
+        }
       }
 
       // Año: 2020-2035
@@ -418,7 +438,7 @@
       }
       
       // Redirigir a inicio
-      window.location.href = '/';
+      window.location.href = '../index.html';
     });
     
     // Inicializar fecha de hoy y calcular días automáticamente
