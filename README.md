@@ -1,6 +1,6 @@
-# 🚗 Control de Expediente - Parque Automotor
+# 🚗 Sistema de Control de Expedientes - Parque Automotor
 
-Sistema web para la gestión integral de expedientes del Parque Automotor, con control de roles y flujo de trabajo automatizado.
+Sistema web moderno para la gestión integral de expedientes del Parque Automotor, con control de roles, flujo de trabajo automatizado y diseño responsive.
 
 ## ✨ Características Principales
 
@@ -15,16 +15,19 @@ Sistema web para la gestión integral de expedientes del Parque Automotor, con c
 - **Búsqueda por fecha** con filtros avanzados
 - **Estados automáticos** (PENDIENTE, FINALIZADO)
 - **Alertas** para expedientes pendientes más de 2 días
+- **Eliminación** de expedientes con confirmación
 
 ### 🎯 Control de Accesos por Rol
 - **ADMIN**: Acceso completo a todas las funcionalidades
 - **MESA_DE_ENTRADA**: Puede crear expedientes, acceso limitado a configuración
 - **PERSONAL**: Solo visualización y movimiento de expedientes
 
-### 📱 Interfaz Moderna
-- **Diseño responsive** con gradientes y animaciones
+### 📱 Interfaz Moderna y Responsive
+- **Diseño responsive** optimizado para móviles y tablets
 - **Fuente Inter** para mejor legibilidad
 - **Iconografía intuitiva** y navegación clara
+- **Botones táctiles** optimizados para dispositivos móviles
+- **Gradientes y animaciones** modernas
 
 ## 🚀 Tecnologías Utilizadas
 
@@ -33,119 +36,106 @@ Sistema web para la gestión integral de expedientes del Parque Automotor, con c
 - **Fuentes**: Google Fonts (Inter)
 - **Iconos**: SVG integrados
 - **Responsive**: CSS Grid y Flexbox
+- **Backend**: Next.js 15 con Prisma (versión Next.js disponible)
 
 ## 📁 Estructura del Proyecto
 
- ```
- ParqueAutomotor/
- ├── index.html                 # Página principal con login y dashboard
- ├── nuevo-expediente/
- │   └── index.html            # Formulario de creación/edición
- ├── configuracion/
- │   └── index.html            # Gestión de usuarios y roles
- ├── .gitignore                # Archivos a excluir de Git
- └── README.md                 # Este archivo
- ```
+```
+ParqueAutomotor/
+├── index.html                 # Página principal con login y dashboard
+├── nuevo-expediente/
+│   └── index.html            # Formulario de creación/edición
+├── configuracion/
+│   └── index.html            # Gestión de usuarios y roles
+├── parque-automotor-next/    # Versión Next.js del proyecto
+│   ├── src/
+│   ├── prisma/
+│   └── package.json
+├── .gitignore                # Archivos a excluir de Git
+└── README.md                 # Este archivo
+```
 
 ## 🔧 Instalación y Uso
 
-### Requisitos
-- Navegador web moderno (Chrome, Firefox, Safari, Edge)
-- Servidor web local o hosting
+### Versión HTML (Actual)
+1. Abre `index.html` en tu navegador web
+2. No requiere instalación adicional
+3. Los datos se guardan en localStorage del navegador
 
-### Instalación Local
-1. **Clonar el repositorio**
-   ```bash
-   git clone https://github.com/pasaludsalta2025-tech/ParqueAutomotor.git
-   cd ParqueAutomotor
-   ```
-
-2. **Servir archivos estáticos**
-   ```bash
-   # Con Python 3
-   python -m http.server 8000
-   
-   # Con Node.js
-   npx http-server -p 8000
-   
-   # Con PHP
-   php -S localhost:8000
-   ```
-
-3. **Abrir en navegador**
-   ```
-   http://localhost:8000
-   ```
-
-### Usuarios por Defecto
-- **ADMIN**: `35477889` / `35477889`
-- **MESA_DE_ENTRADA**: `12345678` / `12345678`
-- **PERSONAL**: `87654321` / `87654321`
-
-## 📊 Funcionalidades por Rol
-
-| Funcionalidad | ADMIN | MESA_DE_ENTRADA | PERSONAL |
-|---------------|-------|------------------|----------|
-| Crear Expedientes | ✅ | ✅ | ❌ |
-| Ver Expedientes | ✅ | ✅ | ✅ |
-| Mover Expedientes | ✅ | ✅ | ✅ |
-| Gestión de Usuarios | ✅ | ❌ | ❌ |
-| Configuración Completa | ✅ | ❌ | ❌ |
-
-## 🔄 Flujo de Expedientes
-
-1. **Creación** → Expediente en estado "CREADO"
-2. **Derivación** → Enviado a "Parque Automotor Ejecutivo" o "Compras"
-3. **Procesamiento** → Estado "PENDIENTE" en sección correspondiente
-4. **Finalización** → Retorno a "Expedientes Creados" como "FINALIZADO"
-5. **Almacenamiento** → Expedientes finalizados son permanentes
-
-## 🎨 Personalización
-
-### Colores del Tema
-```css
-:root {
-  --primary-blue: #1e40af;
-  --primary-blue-light: #3b82f6;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-}
+### Versión Next.js (Opcional)
+```bash
+cd parque-automotor-next
+npm install
+npm run dev
 ```
 
-### Fuentes
-- **Principal**: Inter (Google Fonts)
-- **Fallback**: -apple-system, BlinkMacSystemFont, 'Segoe UI'
+## 📱 Compatibilidad
 
-## 📝 Notas de Desarrollo
+- **Navegadores**: Chrome, Firefox, Safari, Edge (versiones recientes)
+- **Dispositivos**: Desktop, Tablet, Móvil
+- **Resoluciones**: Optimizado para 320px - 1920px+
 
-- **localStorage**: Todos los datos se almacenan localmente en el navegador
-- **Responsive**: Diseño adaptativo para dispositivos móviles y desktop
-- **Accesibilidad**: Uso de atributos ARIA y navegación por teclado
-- **Validación**: Validación del lado cliente con mensajes en español
+## 🎨 Características del Diseño
 
-## 🤝 Contribución
+### Responsive Design
+- **Desktop**: Layout de 3 columnas con sidebar
+- **Tablet**: Layout de 2 columnas adaptativo
+- **Móvil**: Layout de 1 columna con navegación optimizada
 
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
+### Paleta de Colores
+- **Primario**: Azul (#1e40af)
+- **Secundario**: Azul claro (#3b82f6)
+- **Éxito**: Verde (#10b981)
+- **Advertencia**: Amarillo (#f59e0b)
+- **Peligro**: Rojo (#ef4444)
 
-## 📄 Licencia
+## 🔄 Flujo de Trabajo
 
-Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+1. **Creación**: Los expedientes se crean en "Expedientes Creados"
+2. **Asignación**: Se mueven a "Parque Automotor Ejecutivo" o "Centro de Compras"
+3. **Finalización**: Se marcan como "FINALIZADO" cuando se completan
+4. **Seguimiento**: Alertas automáticas para expedientes pendientes >2 días
 
-## 👨‍💻 Autor
+## 🛠️ Funcionalidades Técnicas
 
-**Tu Nombre** - [tu-email@ejemplo.com](mailto:tu-email@ejemplo.com)
+### Gestión de Datos
+- **Persistencia**: localStorage con sincronización automática
+- **Validación**: Formularios con validación en tiempo real
+- **Búsqueda**: Filtros por fecha y estado
+- **Estadísticas**: Contadores automáticos de expedientes
 
-## 🙏 Agradecimientos
+### Optimizaciones Móviles
+- **Touch-friendly**: Botones de 44px mínimo
+- **Gestos**: Soporte para touch y swipe
+- **Performance**: Carga optimizada para conexiones lentas
+- **Accesibilidad**: Navegación por teclado y lectores de pantalla
 
-- Google Fonts por la tipografía Inter
-- Comunidad de desarrolladores web
-- Usuarios del Parque Automotor por el feedback
+## 📊 Estadísticas y Reportes
+
+- **Total de expedientes** por sección
+- **Expedientes pendientes** con alertas
+- **Expedientes finalizados** en el período
+- **Tiempo promedio** de procesamiento
+
+## 🔒 Seguridad
+
+- **Validación de entrada** en todos los formularios
+- **Sanitización** de datos antes de guardar
+- **Control de acceso** basado en roles
+- **Confirmaciones** para acciones destructivas
+
+## 🚀 Próximas Mejoras
+
+- [ ] Exportación a PDF/Excel
+- [ ] Notificaciones push
+- [ ] Modo offline
+- [ ] Integración con APIs externas
+- [ ] Dashboard con gráficos avanzados
+
+## 📞 Soporte
+
+Para reportar problemas o solicitar nuevas funcionalidades, contacta al equipo de desarrollo.
 
 ---
 
-⭐ **¡Si te gusta este proyecto, dale una estrella en GitHub!**
+**Desarrollado con ❤️ para el Parque Automotor**
