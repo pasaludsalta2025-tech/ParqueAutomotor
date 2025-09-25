@@ -1441,10 +1441,16 @@
                             <label class="form-label">
                                 📋 TIPO DE EXPEDIENTE
                             </label>
-                            <select name="tipo" class="form-select">
+                            <select name="tipo" class="form-select" required>
                                 <option value="">Seleccionar tipo</option>
-                                <option value="Parque Automotor Ejecutivo">Parque Automotor Ejecutivo</option>
-                                <option value="Compras">Compras</option>
+                                <option value="Combustible">Combustible</option>
+                                <option value="Seguros">Seguros</option>
+                                <option value="Personal">Personal</option>
+                                <option value="Reparacion">Reparación</option>
+                                <option value="Choferes">Choferes</option>
+                                <option value="Patrimonio">Patrimonio</option>
+                                <option value="Comisiones">Comisiones</option>
+                                <option value="Otros">Otros</option>
                             </select>
                         </div>
                         
@@ -1487,7 +1493,8 @@
                             <label class="form-label">
                                 ⏳ DÍAS DE TRÁMITE
                             </label>
-                            <input type="number" name="diasTramite" class="form-input" value="0" min="0">
+                            <input type="number" name="diasTramite" class="form-input" value="0" min="0" readonly style="background-color: #f1f5f9; color: #64748b;" title="Se calcula automáticamente desde la fecha de ingreso">
+                            <small style="color: #64748b; font-size: 0.75rem; margin-top: 0.25rem; display: block;">Se calcula automáticamente por día transcurrido</small>
                         </div>
                     </div>
                     
@@ -2120,6 +2127,14 @@
                     for (let [key, value] of formData.entries()) {
                         data[key] = value.toString().trim();
                     }
+
+                    // Calcular días de trámite automáticamente
+                    const fechaIngreso = new Date(data.fechaIngreso);
+                    if (!Number.isFinite(fechaIngreso.getTime())) {
+                        alert('Fecha de ingreso inválida.');
+                        return;
+                    }
+                    data.diasTramite = calculateDays(data.fechaIngreso);
                     
                     // Validar campos requeridos
                     if (!data.codigo || !data.fechaIngreso) {
@@ -2128,37 +2143,29 @@
                     }
                     
                     // Crear nuevo expediente
-                    const expedientesCreados = document.getElementById('expedientesCreados');
-                    const emptyExpedientes = document.getElementById('emptyExpedientes');
-                    
-                    if (emptyExpedientes) emptyExpedientes.style.display = 'none';
-                    
-                    const newItem = createExpedienteItem(data);
-                    expedientesCreados.insertBefore(newItem, emptyExpedientes);
-
-                    // Persistir
-                    const stored = getStoredCreated();
-                    stored.push({
+                    const expedientesCreados = getStoredCreated();
+                    expedientesCreados.push({
                         codigo: data.codigo,
                         numero: data.numero || '',
                         anio: data.anio || '',
                         corresponde: data.corresponde || '',
                         derivado: data.derivado || '',
                         fechaIngreso: data.fechaIngreso,
+                        fechaDerivacion: data.fechaDerivacion || '',
                         detalle: data.detalle || '',
                         observacion: data.observacion || '',
-                        diasTramite: data.diasTramite || ''
+                        diasTramite: data.diasTramite || 0,
+                        tipo: data.tipo || 'Otros',
+                        status: 'CREADO',
+                        fechaCreacion: new Date().toISOString()
                     });
-                    setStoredCreated(stored);
-                    
-                    // Actualizar estadísticas
+                    setStoredCreated(expedientesCreados);
+
                     renderAllInCreated();
                     updateStats();
-                    
-                    // Cerrar formulario
+
                     closeForm();
-                    
-                    // Mostrar mensaje de éxito
+
                     setTimeout(() => {
                         alert('Expediente creado exitosamente');
                     }, 300);
