@@ -549,7 +549,8 @@
 
             .delete-btn,
             .edit-btn,
-            .send-btn {
+            .send-btn,
+            .finalize-btn {
                 min-height: 36px;
                 font-size: 0.8rem;
             }
@@ -568,6 +569,26 @@
 
         .edit-btn:hover {
             background: var(--warning);
+            color: var(--white);
+            transform: scale(1.05);
+        }
+
+        .finalize-btn {
+            padding: 0.45rem 0.8rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--success);
+            background: var(--white);
+            color: var(--success);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .finalize-btn:hover {
+            background: var(--success);
             color: var(--white);
             transform: scale(1.05);
         }
@@ -795,128 +816,174 @@
 
         @media (max-width: 768px) {
             body {
-                padding: 0.75rem;
+                padding: 0.5rem;
                 font-size: 14px;
             }
             
             .header {
-                margin-bottom: 1.5rem;
-                padding: 1rem;
+                margin-bottom: 1rem;
+                padding: 0.75rem;
+                text-align: center;
             }
             
             .header h1 {
-                font-size: 1.75rem;
+                font-size: 1.5rem;
                 line-height: 1.2;
             }
 
             .header p {
-                font-size: 1rem;
-                margin-top: 0.5rem;
+                font-size: 0.9rem;
+                margin-top: 0.25rem;
             }
             
             .main-card {
-                margin-bottom: 1rem;
+                margin-bottom: 0.75rem;
             }
             
             .card-header {
-                padding: 1rem;
+                padding: 0.75rem;
                 flex-direction: column;
                 align-items: stretch;
-                gap: 0.75rem;
+                gap: 0.5rem;
             }
 
             .card-header-left {
-                justify-content: space-between;
+                justify-content: center;
                 flex-wrap: wrap;
+                text-align: center;
             }
 
             .card-content {
-                padding: 1rem;
+                padding: 0.75rem;
             }
 
             .section-content {
-                padding: 0.75rem;
+                padding: 0.5rem;
             }
 
             .expediente-item,
             .executive-item {
                 padding: 0.75rem;
-                margin-bottom: 0.75rem;
+                margin-bottom: 0.5rem;
+                border-radius: 8px;
             }
 
             .expediente-header {
                 padding-right: 0;
-                font-size: 0.875rem;
+                font-size: 0.8rem;
                 margin-bottom: 0.5rem;
+                font-weight: 600;
             }
 
             .expediente-details {
-                font-size: 0.8rem;
-                margin-bottom: 0.5rem;
+                font-size: 0.75rem;
+                margin-bottom: 0.75rem;
+                line-height: 1.4;
             }
 
             .item-actions {
-                position: static;
+                position: static !important;
                 margin-top: 0.5rem;
                 display: flex;
-                gap: 0.5rem;
+                gap: 0.25rem;
                 flex-wrap: wrap;
+                justify-content: center;
             }
 
             .item-actions button {
                 flex: 1;
-                min-width: 0;
-                font-size: 0.8rem;
-                padding: 0.4rem 0.6rem;
+                min-width: 60px;
+                font-size: 0.7rem;
+                padding: 0.4rem 0.5rem;
+                border-radius: 4px;
+                min-height: 36px;
+                touch-action: manipulation;
             }
 
             .stats-bar {
                 flex-wrap: wrap;
-                gap: 0.5rem;
+                gap: 0.25rem;
+                justify-content: center;
             }
 
             .stats-item {
-                font-size: 0.8rem;
-                padding: 0.5rem;
+                font-size: 0.75rem;
+                padding: 0.4rem;
+                min-width: 80px;
+                text-align: center;
             }
 
             .form-grid {
                 grid-template-columns: 1fr;
-                gap: 0.75rem;
+                gap: 0.5rem;
             }
 
             .form-content {
-                padding: 1rem;
+                padding: 0.75rem;
             }
 
             .form-group {
-                margin-bottom: 0.75rem;
+                margin-bottom: 0.5rem;
             }
 
             .form-group label {
-                font-size: 0.875rem;
+                font-size: 0.8rem;
                 margin-bottom: 0.25rem;
             }
 
             .form-group input,
             .form-group select,
             .form-group textarea {
-                font-size: 0.875rem;
+                font-size: 0.8rem;
                 padding: 0.5rem;
+                width: 100%;
             }
 
             .btn {
-                font-size: 0.875rem;
-                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+                padding: 0.5rem 0.75rem;
+                min-height: 40px;
+                touch-action: manipulation;
             }
 
             .grid-container {
-                gap: 1rem;
+                gap: 0.75rem;
+                grid-template-columns: 1fr;
             }
 
             .section-title {
-                font-size: 1.125rem;
-                margin-bottom: 0.75rem;
+                font-size: 1rem;
+                margin-bottom: 0.5rem;
+                text-align: center;
+            }
+
+            /* Mejoras específicas para móviles */
+            .card {
+                border-radius: 8px;
+                margin-bottom: 0.5rem;
+            }
+
+            .status-badge {
+                font-size: 0.65rem;
+                padding: 0.2rem 0.4rem;
+            }
+
+            /* Botones más grandes para touch */
+            button, .btn, input[type="button"], input[type="submit"] {
+                min-height: 44px;
+                touch-action: manipulation;
+            }
+
+            /* Selects más grandes */
+            select {
+                min-height: 44px;
+                font-size: 16px; /* Evita zoom en iOS */
+            }
+
+            /* Mejorar legibilidad en pantallas pequeñas */
+            .expediente-details strong {
+                display: inline-block;
+                min-width: 80px;
             }
         }
 
@@ -1274,7 +1341,7 @@
                             <strong>📅 05/08/2025</strong><br>
                             <strong>Código:</strong> SDA-001<br>
                             <strong>Número:</strong> 222/2025<br>
-                            <strong>Corresponde:</strong> Documentación<br>
+                            <strong>Corresponde:</strong> Personal<br>
                             <strong>Derivado a:</strong> Área Legal<br>
                             <strong>Días de trámite:</strong> 0 días
                         </div>
@@ -1587,6 +1654,7 @@
                             <option value="compra">Compras</option>
                         </select>
                         <button class="send-btn" disabled>Enviar</button>
+                        <button class="finalize-btn" onclick="finalizeExpediente('${data.codigo}', this)" title="Finalizar expediente">✅ Finalizar</button>
                         <button class="edit-btn" onclick="editExpediente('${data.codigo}')" title="Modificar expediente">✏️</button>
                         <button class="delete-btn" onclick="deleteExpedienteCreado('${data.codigo}')" title="Eliminar expediente">🗑️</button>
                     </div>
@@ -2354,6 +2422,74 @@
             }
         }
 
+        // Función para finalizar expediente
+        function finalizeExpediente(codigo, button) {
+            if (confirm(`¿Está seguro de que desea finalizar el expediente ${codigo}?`)) {
+                console.log('✅ Finalizando expediente:', codigo);
+                
+                // Buscar el expediente en todas las listas
+                let expedienteData = null;
+                let found = false;
+                
+                // Buscar en creados
+                const expedientesCreados = getStoredCreated();
+                expedienteData = expedientesCreados.find(e => e.codigo === codigo);
+                if (expedienteData) {
+                    // Remover de creados
+                    setStoredCreated(expedientesCreados.filter(e => e.codigo !== codigo));
+                    found = true;
+                }
+                
+                // Buscar en ejecutivo
+                if (!found) {
+                    const expedientesEjecutivo = getStoredEjecutivo();
+                    expedienteData = expedientesEjecutivo.find(e => e.codigo === codigo);
+                    if (expedienteData) {
+                        // Remover de ejecutivo
+                        setStoredEjecutivo(expedientesEjecutivo.filter(e => e.codigo !== codigo));
+                        found = true;
+                    }
+                }
+                
+                // Buscar en compras
+                if (!found) {
+                    const expedientesCompras = getStoredCompras();
+                    expedienteData = expedientesCompras.find(e => e.codigo === codigo);
+                    if (expedienteData) {
+                        // Remover de compras
+                        setStoredCompras(expedientesCompras.filter(e => e.codigo !== codigo));
+                        found = true;
+                    }
+                }
+                
+                if (found && expedienteData) {
+                    // Calcular días de trámite desde creación hasta finalización
+                    const fechaCreacion = new Date(expedienteData.fechaIngreso || expedienteData.fechaCreacion);
+                    const fechaFinalizacion = new Date();
+                    const diasTramite = Math.ceil((fechaFinalizacion - fechaCreacion) / (1000 * 60 * 60 * 24));
+                    
+                    // Agregar a finalizados con fecha de finalización
+                    expedienteData.fechaFinalizacion = fechaFinalizacion.toISOString();
+                    expedienteData.diasTramite = diasTramite;
+                    expedienteData.estado = 'FINALIZADO';
+                    
+                    const expedientesFinalizados = getStoredFinalizados();
+                    expedientesFinalizados.push(expedienteData);
+                    setStoredFinalizados(expedientesFinalizados);
+                    
+                    // Actualizar la interfaz
+                    renderAllInCreated();
+                    renderStoredEjecutivo();
+                    renderStoredCompras();
+                    updateStats();
+                    
+                    alert(`Expediente ${codigo} finalizado exitosamente. Días de trámite: ${diasTramite}`);
+                } else {
+                    alert('Expediente no encontrado');
+                }
+            }
+        }
+
         // Función para editar expediente
         function editExpediente(codigo) {
             console.log('✏️ Editando expediente:', codigo);
@@ -2544,6 +2680,7 @@
                             <option value="compra">Compras</option>
                         </select>
                         <button class="send-btn" disabled>Enviar</button>
+                        <button class="finalize-btn" onclick="finalizeExpediente('${data.codigo}', this)" title="Finalizar expediente">✅ Finalizar</button>
                         <button class="edit-btn" onclick="editExpediente('${data.codigo}')" title="Modificar expediente">✏️</button>
                         <button class="delete-btn" onclick="deleteExpedienteCreado('${data.codigo}')" title="Eliminar expediente">🗑️</button>
                     </div>
