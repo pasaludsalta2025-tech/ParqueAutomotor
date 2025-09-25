@@ -102,7 +102,7 @@
                 <option value="Choferes">Choferes</option>
                 <option value="Patrimonio">Patrimonio</option>
                 <option value="Comisiones">Comisiones</option>
-                <option value="Otros">Otros</option>
+                <option value="Otros" selected>Otros</option>
               </select>
             </div>
             <div class="group">
@@ -323,9 +323,16 @@
 
     document.getElementById('expForm').addEventListener('submit', function(e){
       e.preventDefault();
+      console.log('🚀 Formulario enviado');
       const form = e.target;
-      if (!validateForm(form)) return;
+      console.log('📝 Validando formulario...');
+      if (!validateForm(form)) {
+        console.log('❌ Validación falló');
+        return;
+      }
+      console.log('✅ Validación exitosa');
       const data = Object.fromEntries(new FormData(form).entries());
+      console.log('📋 Datos del formulario:', data);
       if (!data.codigo || !data.fechaIngreso){
         alert('Complete los campos obligatorios: Código y Fecha de Ingreso.');
         return;
@@ -347,7 +354,7 @@
         detalle: (data.detalle||'').trim(),
         observacion: (data.observacion||'').trim(),
         diasTramite: (data.diasTramite||'').trim(),
-        tipo: data.tipo || 'Parque Automotor Ejecutivo',
+        tipo: data.tipo || 'Otros',
         status: 'CREADO',
         fechaCreacion: new Date().toISOString()
       };
