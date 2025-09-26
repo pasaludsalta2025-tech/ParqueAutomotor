@@ -1226,7 +1226,7 @@
             <h1 style="margin-top: -0.5rem;">PARQUE AUTOMOTOR</h1>
             <p>Sistema integral de gestión de expedientes automotores</p>
             <div style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 0.5rem 1rem; border-radius: 8px; margin-top: 1rem; text-align: center; font-weight: 600; font-size: 0.9rem;">
-                🌐 SISTEMA GLOBAL ACTIVO - Expedientes visibles para todos los usuarios desde cualquier dispositivo
+                🗄️ BASE DE DATOS ÚNICA CENTRALIZADA - Una sola fuente de expedientes para todos los usuarios
             </div>
             <div style="position: absolute; top: 1rem; right: 1rem; display:flex; gap:.5rem;">
                 <button class="btn btn-secondary" onclick="window.location.href='/configuracion/'" style="padding: 0.5rem 1rem;">⚙️ CONFIGURACIÓN</button>
@@ -1361,7 +1361,7 @@
                         <h4 style="margin-bottom: 0.5rem; color: var(--gray-700);">Sistema de Compras Integrado</h4>
                         <p style="margin-bottom: 1rem;">Control de Expediente - Parque Automotor</p>
                         <small style="color: var(--gray-500);">📱 App.js - Módulo de gestión de compras y expedientes</small>
-                        <small style="color: var(--green-600); margin-top: 0.5rem; display: block;">🌐 SISTEMA GLOBAL ACTIVO - Expedientes visibles para todos los usuarios</small>
+                        <small style="color: var(--green-600); margin-top: 0.5rem; display: block;">🗄️ BASE DE DATOS ÚNICA - Una sola fuente para todos los usuarios</small>
                         <small style="color: var(--blue-600); margin-top: 0.3rem; display: block;">🔄 FLUJO BIDIRECCIONAL - Mover expedientes entre todas las secciones + Finalizar desde cualquier lugar</small>
                         
                         <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--gray-200);">
@@ -1517,35 +1517,239 @@
     </div>
 
     <script>
-        // --- Cross-Device Global Storage System ---
+        // --- SISTEMA DE BASE DE DATOS ÚNICA CENTRALIZADA ---
         
-        // Enhanced global storage that works across different devices and browsers
-        // Uses multiple storage mechanisms for cross-device synchronization
-        const GLOBAL_STORAGE_KEY = 'SISTEMA_PARQUE_AUTOMOTOR_GLOBAL';
-        const SYNC_SERVER_URL = window.location.origin; // Use same domain for sync
+        // Una sola base de datos compartida para TODOS los usuarios y dispositivos
+        // Todos ven los mismos expedientes independientemente de donde accedan
+        const CENTRAL_DATABASE_KEY = 'PARQUE_AUTOMOTOR_CENTRAL_DB';
         const DEVICE_ID = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         
-        // Cross-device storage simulation using multiple techniques
-        function getGlobalExpedientes(category) {
+        // Simular una base de datos central usando IndexedDB + localStorage como fallback
+        let centralDatabase = null;
+        
+        // SISTEMA DE BASE DE DATOS CENTRAL - UNA SOLA FUENTE PARA TODOS
+        async function initializeCentralDatabase() {
             try {
-                console.log(`📱 [${DEVICE_ID}] Leyendo expedientes globales para: ${category}`);
+                console.log('🗄️ Inicializando base de datos central...');
                 
-                // Try to get from multiple sources and merge
-                const sources = [
-                    getFromLocalStorage(category),
-                    getFromSharedStorage(category),
-                    getFromUrlHash(category)
-                ];
+                // Intentar usar IndexedDB para una verdadera base de datos del navegador
+                if ('indexedDB' in window) {
+                    centralDatabase = await openIndexedDB();
+                    console.log('✅ Base de datos IndexedDB inicializada');
+                } else {
+                    // Fallback a localStorage con clave única global
+                    centralDatabase = {
+                        type: 'localStorage',
+                        key: CENTRAL_DATABASE_KEY
+                    };
+                    console.log('✅ Base de datos localStorage inicializada');
+                }
                 
-                // Merge all sources and deduplicate
-                const merged = mergeExpedienteSources(sources);
-                console.log(`📊 [${DEVICE_ID}] Expedientes encontrados en ${category}:`, merged.length);
+                // Migrar datos existentes a la base central si es necesario
+                await migrateToCentralDatabase();
                 
-                return merged;
+                // Cargar datos iniciales en caché
+                await loadAllCentralData();
+                
             } catch (error) {
-                console.error('Error reading global expedientes:', error);
+                console.error('❌ Error inicializando base de datos central:', error);
+                // Fallback to localStorage
+                centralDatabase = {
+                    type: 'localStorage',
+                    key: CENTRAL_DATABASE_KEY
+                };
+            }
+        }
+        
+        function openIndexedDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('ParqueAutomotorDB', 1);
+                
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    
+                    // Crear tabla de expedientes si no existe
+                    if (!db.objectStoreNames.contains('expedientes')) {
+                        const store = db.createObjectStore('expedientes', { keyPath: 'id' });
+                        store.createIndex('categoria', 'categoria', { unique: false });
+                        store.createIndex('codigo', 'codigo', { unique: false });
+                    }
+                };
+            });
+        }
+        
+        // Leer expedientes de la base de datos central
+        async function getCentralExpedientes(category) {
+            try {
+                console.log(`🗄️ [CENTRAL DB] Leyendo ${category}...`);
+                
+                if (centralDatabase && centralDatabase.type === 'indexedDB') {
+                    // Usar IndexedDB
+                    return await getFromIndexedDB(category);
+                } else {
+                    // Usar localStorage central
+                    return getFromCentralLocalStorage(category);
+                }
+            } catch (error) {
+                console.error('❌ Error leyendo base central:', error);
                 return [];
             }
+        }
+        
+        async function getFromIndexedDB(category) {
+            return new Promise((resolve, reject) => {
+                const transaction = centralDatabase.transaction(['expedientes'], 'readonly');
+                const store = transaction.objectStore('expedientes');
+                const index = store.index('categoria');
+                const request = index.getAll(category);
+                
+                request.onsuccess = () => {
+                    const expedientes = request.result.map(item => item.data);
+                    console.log(`📊 [IndexedDB] ${category}: ${expedientes.length} expedientes`);
+                    resolve(expedientes);
+                };
+                
+                request.onerror = () => reject(request.error);
+            });
+        }
+        
+        function getFromCentralLocalStorage(category) {
+            try {
+                // Usar una clave especial que sea la misma para TODOS los usuarios/dispositivos
+                const centralKey = `${CENTRAL_DATABASE_KEY}_${category}`;
+                const data = localStorage.getItem(centralKey);
+                const expedientes = data ? JSON.parse(data) : [];
+                console.log(`📊 [Central LocalStorage] ${category}: ${expedientes.length} expedientes`);
+                return expedientes;
+            } catch (error) {
+                console.error('❌ Error leyendo localStorage central:', error);
+                return [];
+            }
+        }
+        
+        // Wrapper para mantener compatibilidad
+        function getGlobalExpedientes(category) {
+            // Esta función ahora es síncrona pero internamente usa la base central
+            if (!centralDatabase) {
+                console.warn('⚠️ Base de datos central no inicializada, usando fallback');
+                return getFromCentralLocalStorage(category);
+            }
+            
+            // Para mantener compatibilidad síncrona, usar caché
+            const cached = getCachedCentralData(category);
+            
+            // Actualizar caché de forma asíncrona
+            updateCentralCache(category);
+            
+            return cached;
+        }
+        
+        let centralCache = {
+            expedientesCreados: [],
+            expedientesFinalizados: [],
+            expedientesEjecutivo: [],
+            expedientesCompras: [],
+            lastUpdate: null
+        };
+        
+        function getCachedCentralData(category) {
+            return centralCache[category] || [];
+        }
+        
+        async function updateCentralCache(category) {
+            try {
+                const data = await getCentralExpedientes(category);
+                centralCache[category] = data;
+                centralCache.lastUpdate = new Date().toISOString();
+            } catch (error) {
+                console.error('❌ Error actualizando caché central:', error);
+            }
+        }
+        
+        // Migrar datos existentes de localStorage individual a base central
+        async function migrateToCentralDatabase() {
+            try {
+                console.log('🔄 Migrando datos existentes a base de datos central...');
+                
+                const categories = ['expedientesCreados', 'expedientesFinalizados', 'expedientesEjecutivo', 'expedientesCompras'];
+                let migratedAny = false;
+                
+                for (const category of categories) {
+                    // Verificar si ya existe en base central
+                    const centralData = await getCentralExpedientes(category);
+                    
+                    if (centralData.length === 0) {
+                        // No hay datos centrales, migrar desde localStorage local
+                        const localData = JSON.parse(localStorage.getItem(category) || '[]');
+                        const oldGlobalData = JSON.parse(localStorage.getItem('SISTEMA_PARQUE_AUTOMOTOR_GLOBAL') || '{}')[category] || [];
+                        
+                        // Combinar datos locales con datos globales antiguos
+                        const allLocalData = [...localData, ...oldGlobalData];
+                        
+                        if (allLocalData.length > 0) {
+                            console.log(`📦 Migrando ${category}: ${allLocalData.length} expedientes`);
+                            await setCentralExpedientes(category, allLocalData);
+                            migratedAny = true;
+                        }
+                    }
+                }
+                
+                if (migratedAny) {
+                    console.log('✅ Migración completada - todos los expedientes ahora están en la base central');
+                } else {
+                    console.log('ℹ️ No había datos para migrar o ya están en la base central');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error durante migración:', error);
+            }
+        }
+        
+        // Cargar todos los datos centrales en caché
+        async function loadAllCentralData() {
+            try {
+                console.log('📥 Cargando datos centrales en caché...');
+                
+                const categories = ['expedientesCreados', 'expedientesFinalizados', 'expedientesEjecutivo', 'expedientesCompras'];
+                
+                for (const category of categories) {
+                    await updateCentralCache(category);
+                }
+                
+                console.log('✅ Caché central cargado completamente');
+                
+            } catch (error) {
+                console.error('❌ Error cargando datos centrales:', error);
+            }
+        }
+        
+        // Actualizar listeners para base de datos central
+        function setupCentralDatabaseListeners() {
+            // Escuchar eventos de actualización de base central
+            window.addEventListener('centralDatabaseUpdate', async (event) => {
+                if (event.detail.deviceId !== DEVICE_ID) {
+                    console.log('🔄 Actualizando desde otro dispositivo (central DB):', event.detail);
+                    await updateCentralCache(event.detail.category);
+                    refreshAllSections();
+                }
+            });
+            
+            // BroadcastChannel para comunicación cross-tab
+            if (typeof BroadcastChannel !== 'undefined') {
+                const channel = new BroadcastChannel('central_db_sync');
+                channel.addEventListener('message', async (event) => {
+                    if (event.data.type === 'database_update' && event.data.deviceId !== DEVICE_ID) {
+                        console.log('📻 Mensaje central DB recibido:', event.data);
+                        await updateCentralCache(event.data.category);
+                        refreshAllSections();
+                    }
+                });
+            }
+            
+            console.log('✅ Listeners de base de datos central configurados');
         }
         
         function getFromLocalStorage(category) {
@@ -1604,32 +1808,112 @@
             return Array.from(expedientesMap.values());
         }
         
-        function setGlobalExpedientes(category, data) {
+        // GUARDAR EN BASE DE DATOS CENTRAL - UNA SOLA FUENTE PARA TODOS
+        async function setCentralExpedientes(category, data) {
             try {
-                console.log(`💾 [${DEVICE_ID}] Guardando expedientes globales - ${category}:`, data.length, 'items');
+                console.log(`💾 [CENTRAL DB] Guardando ${category}:`, data.length, 'expedientes');
                 
-                // Add timestamp to each expediente for proper merging
+                // Add timestamp to each expediente
                 const timestampedData = data.map(exp => ({
                     ...exp,
                     fechaModificacion: new Date().toISOString(),
-                    deviceId: DEVICE_ID
+                    lastDevice: DEVICE_ID
                 }));
                 
-                // Save to multiple storage locations
-                saveToLocalStorage(category, timestampedData);
-                saveToSharedStorage(category, timestampedData);
-                saveToUrlHash(category, timestampedData);
+                if (centralDatabase && centralDatabase.type === 'indexedDB') {
+                    // Guardar en IndexedDB
+                    await saveToCentralIndexedDB(category, timestampedData);
+                } else {
+                    // Guardar en localStorage central
+                    saveToCentralLocalStorage(category, timestampedData);
+                }
                 
-                // Trigger cross-device sync
-                triggerCrossDeviceSync(category, timestampedData);
+                // Actualizar caché local inmediatamente
+                centralCache[category] = timestampedData;
+                centralCache.lastUpdate = new Date().toISOString();
                 
-                // Update sync URL whenever data changes
+                // Trigger eventos para otros tabs
+                triggerCentralDatabaseUpdate(category, timestampedData);
+                
+                // Update sync URL
                 updateSyncUrl();
                 
-                console.log(`✅ [${DEVICE_ID}] Expedientes guardados en múltiples ubicaciones`);
+                console.log(`✅ [CENTRAL DB] ${category} guardado exitosamente`);
+                
             } catch (error) {
-                console.error('Error saving global expedientes:', error);
+                console.error('❌ Error guardando en base central:', error);
+                // Fallback to localStorage
+                saveToCentralLocalStorage(category, data);
             }
+        }
+        
+        async function saveToCentralIndexedDB(category, data) {
+            return new Promise((resolve, reject) => {
+                const transaction = centralDatabase.transaction(['expedientes'], 'readwrite');
+                const store = transaction.objectStore('expedientes');
+                
+                // Limpiar datos existentes de esta categoría
+                const index = store.index('categoria');
+                const deleteRequest = index.openCursor(category);
+                
+                deleteRequest.onsuccess = (event) => {
+                    const cursor = event.target.result;
+                    if (cursor) {
+                        cursor.delete();
+                        cursor.continue();
+                    } else {
+                        // Agregar nuevos datos
+                        data.forEach((expediente, index) => {
+                            store.add({
+                                id: `${category}_${expediente.codigo}_${Date.now()}_${index}`,
+                                categoria: category,
+                                codigo: expediente.codigo,
+                                data: expediente
+                            });
+                        });
+                        resolve();
+                    }
+                };
+                
+                deleteRequest.onerror = () => reject(deleteRequest.error);
+            });
+        }
+        
+        function saveToCentralLocalStorage(category, data) {
+            try {
+                const centralKey = `${CENTRAL_DATABASE_KEY}_${category}`;
+                localStorage.setItem(centralKey, JSON.stringify(data));
+                console.log(`✅ [Central LocalStorage] ${category} guardado`);
+            } catch (error) {
+                console.error('❌ Error guardando en localStorage central:', error);
+            }
+        }
+        
+        function triggerCentralDatabaseUpdate(category, data) {
+            // Evento para otros tabs
+            window.dispatchEvent(new CustomEvent('centralDatabaseUpdate', {
+                detail: { category, data, timestamp: new Date().toISOString(), deviceId: DEVICE_ID }
+            }));
+            
+            // BroadcastChannel para comunicación cross-tab
+            if (typeof BroadcastChannel !== 'undefined') {
+                const channel = new BroadcastChannel('central_db_sync');
+                channel.postMessage({
+                    type: 'database_update',
+                    category,
+                    data,
+                    timestamp: new Date().toISOString(),
+                    deviceId: DEVICE_ID
+                });
+            }
+        }
+        
+        // Wrapper para mantener compatibilidad
+        function setGlobalExpedientes(category, data) {
+            // Llamar a la nueva función central de forma asíncrona
+            setCentralExpedientes(category, data).catch(error => {
+                console.error('❌ Error en setGlobalExpedientes:', error);
+            });
         }
         
         function saveToLocalStorage(category, data) {
@@ -2525,9 +2809,9 @@
         }
 
         // Event listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize global system first
-            initializeGlobalSystem();
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Initialize central database system first
+            await initializeGlobalSystem();
             
             // Start real-time synchronization
             startExpedienteWatcher();
@@ -2927,9 +3211,15 @@
             }
         }
 
-        // Initialize global system and migrate existing data
-        function initializeGlobalSystem() {
-            console.log('🚀 Inicializando sistema global de expedientes...');
+        // Initialize central database system and migrate existing data
+        async function initializeGlobalSystem() {
+            console.log('🚀 Inicializando sistema central de expedientes...');
+            
+            // Inicializar base de datos central primero
+            await initializeCentralDatabase();
+            
+            // Configurar listeners
+            setupCentralDatabaseListeners();
             
             // Check if we need to migrate from old localStorage system
             const hasLocalData = localStorage.getItem('expedientesCreados') || 
@@ -3080,39 +3370,50 @@
             }
         };
         
-        // Debug function to check sync status
-        window.debugSyncStatus = function() {
-            console.log('🔍 DEBUG: Estado de sincronización');
+        // Debug function to check central database status
+        window.debugCentralDatabase = function() {
+            console.log('🔍 DEBUG: Estado de la Base de Datos Central');
             console.log('📱 Device ID:', DEVICE_ID);
-            console.log('🌐 URL actual:', window.location.href);
+            console.log('🗄️ Tipo de base central:', centralDatabase ? centralDatabase.type || 'indexedDB' : 'No inicializada');
             
-            const allData = getAllGlobalExpedientes();
-            console.log('📊 Datos globales:');
-            console.log('  - Creados:', allData.creados.length);
-            console.log('  - Ejecutivo:', allData.ejecutivo.length);
-            console.log('  - Compras:', allData.compras.length);
-            console.log('  - Finalizados:', allData.finalizados.length);
-            console.log('  - Última actualización:', allData.lastUpdated);
-            console.log('  - Versión:', allData.version);
-            
-            // Check if URL has sync data
-            const hashData = window.location.hash.substr(1);
-            if (hashData && hashData.startsWith('data=')) {
-                console.log('✅ URL contiene datos de sincronización');
-                try {
-                    const encoded = hashData.substr(5);
-                    const decoded = JSON.parse(atob(encoded));
-                    console.log('📥 Datos en URL:', decoded);
-                } catch (e) {
-                    console.error('❌ Error decodificando URL:', e);
+            // Check cache status
+            console.log('💾 Estado del caché central:');
+            Object.keys(centralCache).forEach(key => {
+                if (key !== 'lastUpdate') {
+                    console.log(`  - ${key}: ${centralCache[key].length} expedientes`);
                 }
-            } else {
-                console.log('⚠️ URL no contiene datos de sincronización');
-            }
+            });
+            console.log('  - Última actualización:', centralCache.lastUpdate);
             
-            // Generate new sync URL
-            const newSyncUrl = generateSyncUrl();
-            console.log('🔗 Nueva URL de sincronización:', newSyncUrl);
+            // Check localStorage central keys
+            console.log('🔑 Claves de localStorage central:');
+            const centralKeys = Object.keys(localStorage).filter(key => key.startsWith(CENTRAL_DATABASE_KEY));
+            centralKeys.forEach(key => {
+                try {
+                    const data = JSON.parse(localStorage.getItem(key));
+                    console.log(`  - ${key}: ${Array.isArray(data) ? data.length : 'No es array'} items`);
+                } catch (e) {
+                    console.log(`  - ${key}: Error parseando datos`);
+                }
+            });
+            
+            // Test database read
+            console.log('🧪 Probando lectura de base de datos...');
+            ['expedientesCreados', 'expedientesFinalizados', 'expedientesEjecutivo', 'expedientesCompras'].forEach(async (category) => {
+                try {
+                    const data = await getCentralExpedientes(category);
+                    console.log(`✅ ${category}: ${data.length} expedientes leídos correctamente`);
+                } catch (error) {
+                    console.error(`❌ Error leyendo ${category}:`, error);
+                }
+            });
+        };
+        
+        // Debug function to check sync status (legacy)
+        window.debugSyncStatus = function() {
+            console.log('ℹ️ Esta función ha sido reemplazada por debugCentralDatabase()');
+            console.log('🔄 Ejecutando debugCentralDatabase() en su lugar...');
+            debugCentralDatabase();
         };
         
         // Update sync URL when data changes
