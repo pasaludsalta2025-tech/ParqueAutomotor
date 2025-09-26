@@ -2231,21 +2231,47 @@
 
         function renderStoredEjecutivo() {
             const list = getStoredEjecutivo();
-            if (!Array.isArray(list) || list.length === 0) return;
             const execSection = document.getElementById('executiveSection');
             const emptyExec = document.getElementById('emptyExecutive');
+            
+            // Limpiar elementos existentes (excepto emptyExec)
+            const existingItems = execSection.querySelectorAll('.executive-item');
+            existingItems.forEach(item => item.remove());
+            
+            if (!Array.isArray(list) || list.length === 0) {
+                console.log('🏢 No hay expedientes en ejecutivo para renderizar');
+                if (emptyExec) emptyExec.style.display = 'block';
+                return;
+            }
+            
+            console.log(`🏢 Renderizando ${list.length} expedientes en ejecutivo...`);
             if (emptyExec) emptyExec.style.display = 'none';
+            
             list.forEach(d => {
                 const el = buildExecutiveItemSimple(d);
                 execSection.insertBefore(el, emptyExec);
+                console.log(`✅ Expediente ${d.codigo} renderizado en ejecutivo`);
             });
         }
 
         function renderStoredCompras() {
             const list = getStoredCompras();
-            if (!Array.isArray(list) || list.length === 0) return;
             const compraContainer = ensureCompraContainer();
-            list.forEach(d => compraContainer.appendChild(buildCompraItemSimple(d)));
+            
+            // Limpiar contenedor antes de renderizar
+            compraContainer.innerHTML = '';
+            
+            if (!Array.isArray(list) || list.length === 0) {
+                console.log('📦 No hay expedientes en compras para renderizar');
+                return;
+            }
+            
+            console.log(`📦 Renderizando ${list.length} expedientes en compras...`);
+            list.forEach(d => {
+                const item = buildCompraItemSimple(d);
+                compraContainer.appendChild(item);
+                console.log(`✅ Expediente ${d.codigo} renderizado en compras`);
+            });
         }
 
         // Función para formatear fecha en español
@@ -2643,9 +2669,15 @@
                     const alreadyExistsCompras = existingCompras.some(exp => exp.codigo === data.codigo);
                     
                     if (!alreadyExistsCompras) {
-                        compraContainer.prepend(buildCompraItemSimple(data));
+                        // Agregar al DOM
+                        const compraItem = buildCompraItemSimple(data);
+                        compraContainer.prepend(compraItem);
+                        
+                        // Agregar al storage
                         existingCompras.push(data);
                         setStoredCompras(existingCompras);
+                        
+                        console.log(`✅ Expediente ${data.codigo} agregado exitosamente a compras`);
                     } else {
                         console.log(`⚠️ Expediente ${data.codigo} ya existe en compras, evitando duplicación`);
                     }
@@ -3127,10 +3159,10 @@
                 });
             }
             
-            // Periodic sync check every 5 seconds for cross-device updates
+            // Periodic sync check every 10 seconds for cross-device updates (reduced frequency)
             setInterval(() => {
                 checkForCrossDeviceUpdates();
-            }, 5000);
+            }, 10000);
             
             // Check for data in URL on initial load
             loadFromUrlIfAvailable();
@@ -3154,14 +3186,23 @@
             const allData = getAllGlobalExpedientes();
             const currentCount = allData.creados.length + allData.ejecutivo.length + allData.compras.length + allData.finalizados.length;
             
-            if (window.lastExpedienteCount !== currentCount || window.lastGlobalVersion !== allData.version) {
-                console.log('📝 Cambios detectados en expedientes cross-device, actualizando...');
+            // Solo actualizar si hay cambios significativos
+            const significantChange = Math.abs(window.lastExpedienteCount - currentCount) > 0;
+            const versionChanged = window.lastGlobalVersion && allData.version && 
+                                 Math.abs(allData.version - window.lastGlobalVersion) > 5000; // 5 segundos de diferencia
+            
+            if (significantChange || versionChanged) {
+                console.log('📝 Cambios significativos detectados en expedientes cross-device, actualizando...');
                 console.log('  - Versión anterior:', window.lastGlobalVersion, '-> Nueva:', allData.version);
                 console.log('  - Total anterior:', window.lastExpedienteCount, '-> Nuevo:', currentCount);
                 
                 window.lastExpedienteCount = currentCount;
                 window.lastGlobalVersion = allData.version;
-                refreshAllSections();
+                
+                // Solo refrescar si realmente hay cambios significativos
+                if (significantChange) {
+                    refreshAllSections();
+                }
             }
         }
         
