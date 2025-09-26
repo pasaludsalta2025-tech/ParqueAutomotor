@@ -1618,7 +1618,19 @@
         
         function getFromCentralLocalStorage(category) {
             try {
-                // Usar una clave especial que sea la misma para TODOS los usuarios/dispositivos
+                // Intentar múltiples fuentes para verdadera sincronización cross-device
+                
+                // 1. Primero, intentar leer de URL hash si está disponible
+                const urlData = tryGetFromUrlHash();
+                if (urlData && urlData[category] && urlData[category].length > 0) {
+                    console.log(`📊 [URL Hash] ${category}: ${urlData[category].length} expedientes`);
+                    // Guardar en localStorage para próximas consultas
+                    const centralKey = `${CENTRAL_DATABASE_KEY}_${category}`;
+                    localStorage.setItem(centralKey, JSON.stringify(urlData[category]));
+                    return urlData[category];
+                }
+                
+                // 2. Si no hay en URL, usar localStorage central
                 const centralKey = `${CENTRAL_DATABASE_KEY}_${category}`;
                 const data = localStorage.getItem(centralKey);
                 const expedientes = data ? JSON.parse(data) : [];
@@ -1627,6 +1639,20 @@
             } catch (error) {
                 console.error('❌ Error leyendo localStorage central:', error);
                 return [];
+            }
+        }
+        
+        function tryGetFromUrlHash() {
+            try {
+                const hashData = window.location.hash.substr(1);
+                if (hashData && hashData.startsWith('data=')) {
+                    const encoded = hashData.substr(5);
+                    const decoded = JSON.parse(atob(encoded));
+                    return decoded;
+                }
+                return null;
+            } catch (error) {
+                return null;
             }
         }
         
@@ -1713,6 +1739,30 @@
             try {
                 console.log('📥 Cargando datos centrales en caché...');
                 
+                // PRIMERO: Intentar cargar datos de URL si están disponibles
+                const urlData = tryGetFromUrlHash();
+                if (urlData) {
+                    console.log('🔗 Datos encontrados en URL, cargando...');
+                    const categories = ['expedientesCreados', 'expedientesFinalizados', 'expedientesEjecutivo', 'expedientesCompras'];
+                    
+                    for (const category of categories) {
+                        if (urlData[category] && Array.isArray(urlData[category])) {
+                            console.log(`📥 Cargando ${category} desde URL:`, urlData[category].length, 'items');
+                            
+                            // Guardar en localStorage central
+                            const centralKey = `${CENTRAL_DATABASE_KEY}_${category}`;
+                            localStorage.setItem(centralKey, JSON.stringify(urlData[category]));
+                            
+                            // Actualizar caché
+                            centralCache[category] = urlData[category];
+                        }
+                    }
+                    
+                    centralCache.lastUpdate = new Date().toISOString();
+                    console.log('✅ Datos cargados desde URL compartida');
+                }
+                
+                // DESPUÉS: Cargar datos restantes del caché
                 const categories = ['expedientesCreados', 'expedientesFinalizados', 'expedientesEjecutivo', 'expedientesCompras'];
                 
                 for (const category of categories) {
@@ -1884,8 +1934,37 @@
                 const centralKey = `${CENTRAL_DATABASE_KEY}_${category}`;
                 localStorage.setItem(centralKey, JSON.stringify(data));
                 console.log(`✅ [Central LocalStorage] ${category} guardado`);
+                
+                // IMPORTANTE: Actualizar URL inmediatamente para sincronización cross-device
+                updateUrlWithAllData();
             } catch (error) {
                 console.error('❌ Error guardando en localStorage central:', error);
+            }
+        }
+        
+        function updateUrlWithAllData() {
+            try {
+                // Obtener todos los datos actuales
+                const allData = {
+                    expedientesCreados: getFromCentralLocalStorage('expedientesCreados'),
+                    expedientesFinalizados: getFromCentralLocalStorage('expedientesFinalizados'),
+                    expedientesEjecutivo: getFromCentralLocalStorage('expedientesEjecutivo'),
+                    expedientesCompras: getFromCentralLocalStorage('expedientesCompras'),
+                    lastUpdated: new Date().toISOString(),
+                    deviceId: DEVICE_ID
+                };
+                
+                // Codificar en URL
+                const encoded = btoa(JSON.stringify(allData));
+                const newHash = `#data=${encoded}`;
+                
+                // Actualizar URL sin reload
+                if (window.location.hash !== newHash) {
+                    window.history.replaceState(null, '', newHash);
+                    console.log('🔗 URL actualizada con datos más recientes para sincronización cross-device');
+                }
+            } catch (error) {
+                console.error('❌ Error actualizando URL:', error);
             }
         }
         
@@ -2001,18 +2080,40 @@
         function getAllGlobalExpedientes() {
             try {
                 // Usar el caché central en lugar de localStorage individual
-                return {
+                const data = {
                     creados: centralCache.expedientesCreados || [],
                     finalizados: centralCache.expedientesFinalizados || [],
                     ejecutivo: centralCache.expedientesEjecutivo || [],
                     compras: centralCache.expedientesCompras || [],
                     lastUpdated: centralCache.lastUpdate,
-                    version: Date.now() // Usar timestamp como versión
+                    version: centralCache.version || 1 // Usar versión estable del caché
                 };
+                
+                // Calcular hash simple basado en contenido para versión estable
+                const contentString = JSON.stringify({
+                    creados: data.creados.length,
+                    finalizados: data.finalizados.length,
+                    ejecutivo: data.ejecutivo.length,
+                    compras: data.compras.length,
+                    lastUpdate: data.lastUpdated
+                });
+                data.version = hashSimple(contentString);
+                
+                return data;
             } catch (error) {
                 console.error('Error reading all global expedientes:', error);
-                return { creados: [], finalizados: [], ejecutivo: [], compras: [] };
+                return { creados: [], finalizados: [], ejecutivo: [], compras: [], version: 1 };
             }
+        }
+        
+        function hashSimple(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32bit integer
+            }
+            return Math.abs(hash);
         }
 
         // --- Persistencia con localStorage ---
@@ -3186,23 +3287,20 @@
             const allData = getAllGlobalExpedientes();
             const currentCount = allData.creados.length + allData.ejecutivo.length + allData.compras.length + allData.finalizados.length;
             
-            // Solo actualizar si hay cambios significativos
-            const significantChange = Math.abs(window.lastExpedienteCount - currentCount) > 0;
-            const versionChanged = window.lastGlobalVersion && allData.version && 
-                                 Math.abs(allData.version - window.lastGlobalVersion) > 5000; // 5 segundos de diferencia
+            // Solo actualizar si hay cambios REALES en el conteo
+            const countChanged = window.lastExpedienteCount !== currentCount;
+            const versionChanged = window.lastGlobalVersion !== allData.version;
             
-            if (significantChange || versionChanged) {
-                console.log('📝 Cambios significativos detectados en expedientes cross-device, actualizando...');
-                console.log('  - Versión anterior:', window.lastGlobalVersion, '-> Nueva:', allData.version);
-                console.log('  - Total anterior:', window.lastExpedienteCount, '-> Nuevo:', currentCount);
-                
+            if (countChanged) {
+                console.log('📝 Cambio REAL detectado en cantidad de expedientes:', window.lastExpedienteCount, '->', currentCount);
                 window.lastExpedienteCount = currentCount;
                 window.lastGlobalVersion = allData.version;
-                
-                // Solo refrescar si realmente hay cambios significativos
-                if (significantChange) {
-                    refreshAllSections();
-                }
+                refreshAllSections();
+            } else if (versionChanged && !window.lastGlobalVersion) {
+                // Solo en la primera carga
+                console.log('📝 Inicializando versión:', allData.version);
+                window.lastExpedienteCount = currentCount;
+                window.lastGlobalVersion = allData.version;
             }
         }
         
@@ -3384,6 +3482,12 @@
                     <p style="margin: 0.5rem 0 0 0; padding: 0.5rem; background: #dbeafe; border-radius: 4px; color: #1e40af; font-size: 0.85rem;">
                         💡 <strong>Tip:</strong> Guarda esta URL en favoritos para acceso rápido desde cualquier dispositivo
                     </p>
+                    <div style="margin-top: 0.5rem; padding: 0.5rem; background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 4px; font-size: 0.8rem;">
+                        <strong style="color: #0c4a6e;">🔄 SINCRONIZACIÓN AUTOMÁTICA:</strong>
+                        <br>• Esta URL se actualiza automáticamente con cada cambio
+                        <br>• Comparte la URL actualizada para sincronizar entre dispositivos
+                        <br>• Los expedientes aparecerán instantáneamente en el otro dispositivo
+                    </div>
                 `;
                 
                 header.appendChild(instructionsPanel);
@@ -3458,20 +3562,47 @@
             try {
                 const syncDisplay = document.getElementById('syncUrlDisplay');
                 if (syncDisplay) {
-                    const allData = getAllGlobalExpedientes();
-                    const encoded = btoa(JSON.stringify(allData));
+                    // Obtener datos frescos directamente de localStorage central
+                    const freshData = {
+                        expedientesCreados: getFromCentralLocalStorage('expedientesCreados'),
+                        expedientesFinalizados: getFromCentralLocalStorage('expedientesFinalizados'),
+                        expedientesEjecutivo: getFromCentralLocalStorage('expedientesEjecutivo'),
+                        expedientesCompras: getFromCentralLocalStorage('expedientesCompras'),
+                        lastUpdated: new Date().toISOString(),
+                        deviceId: DEVICE_ID
+                    };
+                    
+                    const encoded = btoa(JSON.stringify(freshData));
                     const syncUrl = `${window.location.origin}${window.location.pathname}#data=${encoded}`;
                     
                     const input = syncDisplay.querySelector('input');
                     if (input) {
                         input.value = syncUrl;
-                        console.log('🔗 URL de sincronización actualizada automáticamente');
+                        console.log('🔗 URL de sincronización actualizada con datos frescos');
+                    }
+                    
+                    // También actualizar la URL actual del navegador
+                    if (window.location.hash !== `#data=${encoded}`) {
+                        window.history.replaceState(null, '', `#data=${encoded}`);
+                        console.log('🔗 URL del navegador actualizada para sincronización');
                     }
                 }
             } catch (error) {
                 console.error('Error actualizando URL de sincronización:', error);
             }
         }
+        
+        // Función para forzar sincronización cross-device
+        window.forceCrossDeviceSync = function() {
+            console.log('🔄 Forzando sincronización cross-device...');
+            updateUrlWithAllData();
+            updateSyncUrl();
+            
+            const allData = getAllGlobalExpedientes();
+            const total = allData.creados.length + allData.ejecutivo.length + allData.compras.length + allData.finalizados.length;
+            
+            alert(`🔄 Sincronización forzada completada!\n\n📊 Total expedientes: ${total}\n\n🔗 URL actualizada automáticamente.\n\nCopia la URL actual y pégala en otro dispositivo para sincronizar.`);
+        };
 
         // Function to show all expedientes from all categories and users
         function showAllExpedientesGlobal() {
