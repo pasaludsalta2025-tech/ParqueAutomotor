@@ -1758,6 +1758,11 @@
             setGlobalExpedientes('expedientesCreados', list);
             // Also keep in localStorage for compatibility
             localStorage.setItem('expedientesCreados', JSON.stringify(list));
+            
+            // Force update sync URL whenever expedientes are modified
+            setTimeout(() => {
+                updateSyncUrl();
+            }, 100);
         }
 
         function getStoredFinalizados() {
@@ -1790,6 +1795,11 @@
         function setStoredEjecutivo(list) {
             setGlobalExpedientes('expedientesEjecutivo', list);
             localStorage.setItem('expedientesEjecutivo', JSON.stringify(list));
+            
+            // Force update sync URL whenever expedientes are modified
+            setTimeout(() => {
+                updateSyncUrl();
+            }, 100);
         }
 
         function getStoredCompras() {
@@ -1806,6 +1816,11 @@
         function setStoredCompras(list) {
             setGlobalExpedientes('expedientesCompras', list);
             localStorage.setItem('expedientesCompras', JSON.stringify(list));
+            
+            // Force update sync URL whenever expedientes are modified
+            setTimeout(() => {
+                updateSyncUrl();
+            }, 100);
         }
 
         function renderAllInCreated() {
@@ -2065,7 +2080,7 @@
                     alert('Seleccione un destino (Ejecutivo o Compras).');
                     return;
                 }
-                moveExpediente(data, destino, item);
+                moveBidirectionalExpediente(data, 'creados', destino, item);
                 checkbox.checked = false;
                 select.value = '';
                 select.disabled = true;
@@ -2301,11 +2316,17 @@
                     const emptyExpedientes = document.getElementById('emptyExpedientes');
                     if (emptyExpedientes) emptyExpedientes.style.display = 'none';
                     
-                    // Create new expediente item (reusing existing logic)
-                    const createdsList = getStoredCreated();
-                    createdsList.push(data);
-                    setStoredCreated(createdsList);
-                    renderAllInCreated(); // Refresh the entire section
+                    // Check if expediente already exists to avoid duplication
+                    const existingCreateds = getStoredCreated();
+                    const alreadyExists = existingCreateds.some(exp => exp.codigo === data.codigo);
+                    
+                    if (!alreadyExists) {
+                        existingCreateds.push(data);
+                        setStoredCreated(existingCreateds);
+                        renderAllInCreated(); // Refresh the entire section
+                    } else {
+                        console.log(`⚠️ Expediente ${data.codigo} ya existe en creados, evitando duplicación`);
+                    }
                     break;
                     
                 case 'ejecutivo':
@@ -2314,10 +2335,17 @@
                     const emptyExec = document.getElementById('emptyExecutive');
                     if (emptyExec) emptyExec.style.display = 'none';
                     
-                    execSection.insertBefore(buildExecutiveItemSimple(data), emptyExec);
-                    const ejList = getStoredEjecutivo();
-                    ejList.push(data);
-                    setStoredEjecutivo(ejList);
+                    // Check if expediente already exists to avoid duplication
+                    const existingEjecutivo = getStoredEjecutivo();
+                    const alreadyExistsEjecutivo = existingEjecutivo.some(exp => exp.codigo === data.codigo);
+                    
+                    if (!alreadyExistsEjecutivo) {
+                        execSection.insertBefore(buildExecutiveItemSimple(data), emptyExec);
+                        existingEjecutivo.push(data);
+                        setStoredEjecutivo(existingEjecutivo);
+                    } else {
+                        console.log(`⚠️ Expediente ${data.codigo} ya existe en ejecutivo, evitando duplicación`);
+                    }
                     break;
                     
                 case 'compras':
@@ -2329,10 +2357,18 @@
                         const compraSection = document.querySelector('.section-card:nth-of-type(3) .section-content');
                         compraSection.appendChild(compraContainer);
                     }
-                    compraContainer.prepend(buildCompraItemSimple(data));
-                    const cList = getStoredCompras();
-                    cList.push(data);
-                    setStoredCompras(cList);
+                    
+                    // Check if expediente already exists to avoid duplication
+                    const existingCompras = getStoredCompras();
+                    const alreadyExistsCompras = existingCompras.some(exp => exp.codigo === data.codigo);
+                    
+                    if (!alreadyExistsCompras) {
+                        compraContainer.prepend(buildCompraItemSimple(data));
+                        existingCompras.push(data);
+                        setStoredCompras(existingCompras);
+                    } else {
+                        console.log(`⚠️ Expediente ${data.codigo} ya existe en compras, evitando duplicación`);
+                    }
                     break;
             }
         }
@@ -2857,21 +2893,37 @@
                     const encoded = hashData.substr(5);
                     const decoded = JSON.parse(atob(encoded));
                     
+                    console.log('📥 Datos decodificados desde URL:', decoded);
+                    
                     // Load data from URL into local storage
-                    Object.keys(decoded).forEach(category => {
-                        if (['expedientesCreados', 'expedientesFinalizados', 'expedientesEjecutivo', 'expedientesCompras'].includes(category)) {
+                    const categories = ['expedientesCreados', 'expedientesFinalizados', 'expedientesEjecutivo', 'expedientesCompras'];
+                    let hasData = false;
+                    
+                    categories.forEach(category => {
+                        if (decoded[category] && Array.isArray(decoded[category]) && decoded[category].length > 0) {
                             console.log(`📥 Cargando ${category} desde URL:`, decoded[category].length, 'items');
                             saveToLocalStorage(category, decoded[category]);
                             saveToSharedStorage(category, decoded[category]);
+                            hasData = true;
                         }
                     });
                     
-                    // Refresh display
-                    refreshAllSections();
-                    console.log('✅ Datos cargados exitosamente desde URL compartida');
+                    if (hasData) {
+                        // Refresh display
+                        refreshAllSections();
+                        console.log('✅ Datos cargados exitosamente desde URL compartida');
+                        
+                        // Show success message
+                        alert('📱💻 ¡Datos sincronizados exitosamente desde otro dispositivo!');
+                    } else {
+                        console.log('⚠️ No hay datos válidos en la URL');
+                    }
+                } else {
+                    console.log('🔍 No se encontraron datos de sincronización en la URL');
                 }
             } catch (error) {
                 console.error('Error loading data from URL:', error);
+                alert('❌ Error al cargar datos de sincronización. Verifica que la URL sea correcta.');
             }
         }
 
@@ -2919,17 +2971,32 @@
         function generateSyncUrl() {
             try {
                 const allData = getAllGlobalExpedientes();
-                if (allData.creados.length > 0 || allData.ejecutivo.length > 0 || allData.compras.length > 0 || allData.finalizados.length > 0) {
-                    const encoded = btoa(JSON.stringify(allData));
-                    const syncUrl = `${window.location.origin}${window.location.pathname}#data=${encoded}`;
-                    
-                    // Add sync URL display to interface
-                    addSyncUrlDisplay(syncUrl);
-                    
-                    console.log('🔗 URL de sincronización generada:', syncUrl);
-                }
+                console.log('📊 Datos para sincronización:', allData);
+                
+                // Always generate URL, even if empty (for initial setup)
+                const syncData = {
+                    expedientesCreados: allData.creados || [],
+                    expedientesFinalizados: allData.finalizados || [],
+                    expedientesEjecutivo: allData.ejecutivo || [],
+                    expedientesCompras: allData.compras || [],
+                    lastUpdated: new Date().toISOString(),
+                    version: allData.version || 0,
+                    deviceId: DEVICE_ID
+                };
+                
+                const encoded = btoa(JSON.stringify(syncData));
+                const syncUrl = `${window.location.origin}${window.location.pathname}#data=${encoded}`;
+                
+                // Add sync URL display to interface
+                addSyncUrlDisplay(syncUrl);
+                
+                console.log('🔗 URL de sincronización generada:', syncUrl);
+                console.log('📱 Datos codificados:', syncData);
+                
+                return syncUrl;
             } catch (error) {
                 console.error('Error generando URL de sincronización:', error);
+                return null;
             }
         }
         
@@ -3011,6 +3078,41 @@
             if (instructions) {
                 instructions.style.display = instructions.style.display === 'none' ? 'block' : 'none';
             }
+        };
+        
+        // Debug function to check sync status
+        window.debugSyncStatus = function() {
+            console.log('🔍 DEBUG: Estado de sincronización');
+            console.log('📱 Device ID:', DEVICE_ID);
+            console.log('🌐 URL actual:', window.location.href);
+            
+            const allData = getAllGlobalExpedientes();
+            console.log('📊 Datos globales:');
+            console.log('  - Creados:', allData.creados.length);
+            console.log('  - Ejecutivo:', allData.ejecutivo.length);
+            console.log('  - Compras:', allData.compras.length);
+            console.log('  - Finalizados:', allData.finalizados.length);
+            console.log('  - Última actualización:', allData.lastUpdated);
+            console.log('  - Versión:', allData.version);
+            
+            // Check if URL has sync data
+            const hashData = window.location.hash.substr(1);
+            if (hashData && hashData.startsWith('data=')) {
+                console.log('✅ URL contiene datos de sincronización');
+                try {
+                    const encoded = hashData.substr(5);
+                    const decoded = JSON.parse(atob(encoded));
+                    console.log('📥 Datos en URL:', decoded);
+                } catch (e) {
+                    console.error('❌ Error decodificando URL:', e);
+                }
+            } else {
+                console.log('⚠️ URL no contiene datos de sincronización');
+            }
+            
+            // Generate new sync URL
+            const newSyncUrl = generateSyncUrl();
+            console.log('🔗 Nueva URL de sincronización:', newSyncUrl);
         };
         
         // Update sync URL when data changes
