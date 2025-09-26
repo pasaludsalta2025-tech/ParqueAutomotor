@@ -1754,8 +1754,8 @@
         
         function getFromLocalStorage(category) {
             try {
-                const globalStorage = JSON.parse(localStorage.getItem(GLOBAL_STORAGE_KEY) || '{}');
-                return globalStorage[category] || [];
+                // Usar localStorage central en lugar del antiguo GLOBAL_STORAGE_KEY
+                return getFromCentralLocalStorage(category);
             } catch {
                 return [];
             }
@@ -1764,7 +1764,7 @@
         function getFromSharedStorage(category) {
             try {
                 // Use sessionStorage as a secondary source (shared across tabs)
-                const sharedKey = `SHARED_${GLOBAL_STORAGE_KEY}`;
+                const sharedKey = `SHARED_${CENTRAL_DATABASE_KEY}`;
                 const sharedStorage = JSON.parse(sessionStorage.getItem(sharedKey) || '{}');
                 return sharedStorage[category] || [];
             } catch {
@@ -1918,12 +1918,8 @@
         
         function saveToLocalStorage(category, data) {
             try {
-                const globalStorage = JSON.parse(localStorage.getItem(GLOBAL_STORAGE_KEY) || '{}');
-                globalStorage[category] = data;
-                globalStorage.lastUpdated = new Date().toISOString();
-                globalStorage.version = (globalStorage.version || 0) + 1;
-                globalStorage.deviceId = DEVICE_ID;
-                localStorage.setItem(GLOBAL_STORAGE_KEY, JSON.stringify(globalStorage));
+                // Usar el sistema central en lugar del antiguo global storage
+                saveToCentralLocalStorage(category, data);
             } catch (error) {
                 console.error('Error saving to localStorage:', error);
             }
@@ -1931,7 +1927,7 @@
         
         function saveToSharedStorage(category, data) {
             try {
-                const sharedKey = `SHARED_${GLOBAL_STORAGE_KEY}`;
+                const sharedKey = `SHARED_${CENTRAL_DATABASE_KEY}`;
                 const sharedStorage = JSON.parse(sessionStorage.getItem(sharedKey) || '{}');
                 sharedStorage[category] = data;
                 sharedStorage.lastUpdated = new Date().toISOString();
@@ -2004,14 +2000,14 @@
         
         function getAllGlobalExpedientes() {
             try {
-                const globalStorage = JSON.parse(localStorage.getItem(GLOBAL_STORAGE_KEY) || '{}');
+                // Usar el caché central en lugar de localStorage individual
                 return {
-                    creados: globalStorage.expedientesCreados || [],
-                    finalizados: globalStorage.expedientesFinalizados || [],
-                    ejecutivo: globalStorage.expedientesEjecutivo || [],
-                    compras: globalStorage.expedientesCompras || [],
-                    lastUpdated: globalStorage.lastUpdated,
-                    version: globalStorage.version || 0
+                    creados: centralCache.expedientesCreados || [],
+                    finalizados: centralCache.expedientesFinalizados || [],
+                    ejecutivo: centralCache.expedientesEjecutivo || [],
+                    compras: centralCache.expedientesCompras || [],
+                    lastUpdated: centralCache.lastUpdate,
+                    version: Date.now() // Usar timestamp como versión
                 };
             } catch (error) {
                 console.error('Error reading all global expedientes:', error);
@@ -3107,8 +3103,8 @@
             
             // Listen for storage events (cross-tab communication)
             window.addEventListener('storage', (event) => {
-                if (event.key === GLOBAL_STORAGE_KEY || event.key.includes('SHARED_')) {
-                    console.log('🔄 Cambios detectados en almacenamiento, sincronizando...');
+                if (event.key === CENTRAL_DATABASE_KEY || event.key.includes('SHARED_') || event.key.includes('PARQUE_AUTOMOTOR_CENTRAL_DB')) {
+                    console.log('🔄 Cambios detectados en almacenamiento central, sincronizando...');
                     refreshAllSections();
                 }
             });
@@ -3227,7 +3223,7 @@
                                 localStorage.getItem('expedientesEjecutivo') || 
                                 localStorage.getItem('expedientesCompras');
                                 
-            const hasGlobalData = localStorage.getItem(GLOBAL_STORAGE_KEY);
+            const hasGlobalData = localStorage.getItem('SISTEMA_PARQUE_AUTOMOTOR_GLOBAL');
             
             if (hasLocalData && !hasGlobalData) {
                 console.log('📦 Migrando datos locales al sistema global...');
