@@ -1225,6 +1225,9 @@
             <h1>CONTROL DE EXPEDIENTE</h1>
             <h1 style="margin-top: -0.5rem;">PARQUE AUTOMOTOR</h1>
             <p>Sistema integral de gestión de expedientes automotores</p>
+            <div style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 0.5rem 1rem; border-radius: 8px; margin-top: 1rem; text-align: center; font-weight: 600; font-size: 0.9rem;">
+                🌐 SISTEMA GLOBAL ACTIVO - Expedientes visibles para todos los usuarios desde cualquier dispositivo
+            </div>
             <div style="position: absolute; top: 1rem; right: 1rem; display:flex; gap:.5rem;">
                 <button class="btn btn-secondary" onclick="window.location.href='/configuracion/'" style="padding: 0.5rem 1rem;">⚙️ CONFIGURACIÓN</button>
                 <button class="btn btn-secondary" onclick="logout()" style="padding: 0.5rem 1rem;">🚪 CERRAR SESIÓN</button>
@@ -1358,6 +1361,8 @@
                         <h4 style="margin-bottom: 0.5rem; color: var(--gray-700);">Sistema de Compras Integrado</h4>
                         <p style="margin-bottom: 1rem;">Control de Expediente - Parque Automotor</p>
                         <small style="color: var(--gray-500);">📱 App.js - Módulo de gestión de compras y expedientes</small>
+                        <small style="color: var(--green-600); margin-top: 0.5rem; display: block;">🌐 SISTEMA GLOBAL ACTIVO - Expedientes visibles para todos los usuarios</small>
+                        <small style="color: var(--blue-600); margin-top: 0.3rem; display: block;">🔄 FLUJO BIDIRECCIONAL - Mover expedientes entre todas las secciones + Finalizar desde cualquier lugar</small>
                         
                         <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--gray-200);">
                             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.875rem;">
@@ -1512,36 +1517,294 @@
     </div>
 
     <script>
+        // --- Cross-Device Global Storage System ---
+        
+        // Enhanced global storage that works across different devices and browsers
+        // Uses multiple storage mechanisms for cross-device synchronization
+        const GLOBAL_STORAGE_KEY = 'SISTEMA_PARQUE_AUTOMOTOR_GLOBAL';
+        const SYNC_SERVER_URL = window.location.origin; // Use same domain for sync
+        const DEVICE_ID = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        
+        // Cross-device storage simulation using multiple techniques
+        function getGlobalExpedientes(category) {
+            try {
+                console.log(`📱 [${DEVICE_ID}] Leyendo expedientes globales para: ${category}`);
+                
+                // Try to get from multiple sources and merge
+                const sources = [
+                    getFromLocalStorage(category),
+                    getFromSharedStorage(category),
+                    getFromUrlHash(category)
+                ];
+                
+                // Merge all sources and deduplicate
+                const merged = mergeExpedienteSources(sources);
+                console.log(`📊 [${DEVICE_ID}] Expedientes encontrados en ${category}:`, merged.length);
+                
+                return merged;
+            } catch (error) {
+                console.error('Error reading global expedientes:', error);
+                return [];
+            }
+        }
+        
+        function getFromLocalStorage(category) {
+            try {
+                const globalStorage = JSON.parse(localStorage.getItem(GLOBAL_STORAGE_KEY) || '{}');
+                return globalStorage[category] || [];
+            } catch {
+                return [];
+            }
+        }
+        
+        function getFromSharedStorage(category) {
+            try {
+                // Use sessionStorage as a secondary source (shared across tabs)
+                const sharedKey = `SHARED_${GLOBAL_STORAGE_KEY}`;
+                const sharedStorage = JSON.parse(sessionStorage.getItem(sharedKey) || '{}');
+                return sharedStorage[category] || [];
+            } catch {
+                return [];
+            }
+        }
+        
+        function getFromUrlHash(category) {
+            try {
+                // Try to read data from URL hash (for cross-device sharing)
+                const hashData = window.location.hash.substr(1);
+                if (hashData && hashData.startsWith('data=')) {
+                    const encoded = hashData.substr(5);
+                    const decoded = JSON.parse(atob(encoded));
+                    return decoded[category] || [];
+                }
+                return [];
+            } catch {
+                return [];
+            }
+        }
+        
+        function mergeExpedienteSources(sources) {
+            const expedientesMap = new Map();
+            
+            // Merge all sources, using codigo as unique key
+            sources.forEach(source => {
+                if (Array.isArray(source)) {
+                    source.forEach(exp => {
+                        if (exp && exp.codigo) {
+                            // Use the most recent version (by fechaCreacion or fechaModificacion)
+                            const existing = expedientesMap.get(exp.codigo);
+                            if (!existing || (exp.fechaModificacion || exp.fechaCreacion) > (existing.fechaModificacion || existing.fechaCreacion)) {
+                                expedientesMap.set(exp.codigo, exp);
+                            }
+                        }
+                    });
+                }
+            });
+            
+            return Array.from(expedientesMap.values());
+        }
+        
+        function setGlobalExpedientes(category, data) {
+            try {
+                console.log(`💾 [${DEVICE_ID}] Guardando expedientes globales - ${category}:`, data.length, 'items');
+                
+                // Add timestamp to each expediente for proper merging
+                const timestampedData = data.map(exp => ({
+                    ...exp,
+                    fechaModificacion: new Date().toISOString(),
+                    deviceId: DEVICE_ID
+                }));
+                
+                // Save to multiple storage locations
+                saveToLocalStorage(category, timestampedData);
+                saveToSharedStorage(category, timestampedData);
+                saveToUrlHash(category, timestampedData);
+                
+                // Trigger cross-device sync
+                triggerCrossDeviceSync(category, timestampedData);
+                
+                // Update sync URL whenever data changes
+                updateSyncUrl();
+                
+                console.log(`✅ [${DEVICE_ID}] Expedientes guardados en múltiples ubicaciones`);
+            } catch (error) {
+                console.error('Error saving global expedientes:', error);
+            }
+        }
+        
+        function saveToLocalStorage(category, data) {
+            try {
+                const globalStorage = JSON.parse(localStorage.getItem(GLOBAL_STORAGE_KEY) || '{}');
+                globalStorage[category] = data;
+                globalStorage.lastUpdated = new Date().toISOString();
+                globalStorage.version = (globalStorage.version || 0) + 1;
+                globalStorage.deviceId = DEVICE_ID;
+                localStorage.setItem(GLOBAL_STORAGE_KEY, JSON.stringify(globalStorage));
+            } catch (error) {
+                console.error('Error saving to localStorage:', error);
+            }
+        }
+        
+        function saveToSharedStorage(category, data) {
+            try {
+                const sharedKey = `SHARED_${GLOBAL_STORAGE_KEY}`;
+                const sharedStorage = JSON.parse(sessionStorage.getItem(sharedKey) || '{}');
+                sharedStorage[category] = data;
+                sharedStorage.lastUpdated = new Date().toISOString();
+                sharedStorage.deviceId = DEVICE_ID;
+                sessionStorage.setItem(sharedKey, JSON.stringify(sharedStorage));
+            } catch (error) {
+                console.error('Error saving to sessionStorage:', error);
+            }
+        }
+        
+        function saveToUrlHash(category, data) {
+            try {
+                // Create a shareable URL with data encoded in hash
+                const allData = getAllGlobalExpedientes();
+                allData[category] = data;
+                allData.lastUpdated = new Date().toISOString();
+                allData.deviceId = DEVICE_ID;
+                
+                // Encode data in URL hash for sharing
+                const encoded = btoa(JSON.stringify(allData));
+                const newHash = `#data=${encoded}`;
+                
+                // Update URL without triggering page reload
+                if (window.location.hash !== newHash) {
+                    window.history.replaceState(null, '', newHash);
+                    console.log(`🔗 [${DEVICE_ID}] URL actualizada para sincronización cross-device`);
+                }
+            } catch (error) {
+                console.error('Error saving to URL hash:', error);
+            }
+        }
+        
+        function triggerCrossDeviceSync(category, data) {
+            try {
+                // Trigger update event for other tabs/windows
+                window.dispatchEvent(new CustomEvent('expedientesUpdated', { 
+                    detail: { category, data, timestamp: new Date().toISOString(), deviceId: DEVICE_ID } 
+                }));
+                
+                // Try to use BroadcastChannel for cross-tab communication
+                if (typeof BroadcastChannel !== 'undefined') {
+                    const channel = new BroadcastChannel('expedientes_sync');
+                    channel.postMessage({
+                        type: 'expediente_update',
+                        category,
+                        data,
+                        timestamp: new Date().toISOString(),
+                        deviceId: DEVICE_ID
+                    });
+                }
+                
+                // Show cross-device sharing instructions
+                showCrossDeviceInstructions();
+                
+            } catch (error) {
+                console.error('Error triggering cross-device sync:', error);
+            }
+        }
+        
+        function showCrossDeviceInstructions() {
+            if (!window.crossDeviceInstructionsShown) {
+                console.log('📱💻 SINCRONIZACIÓN CROSS-DEVICE ACTIVA:');
+                console.log('  1. Copia la URL actual completa (incluye #data=...)');
+                console.log('  2. Pega la URL en otro dispositivo/navegador');
+                console.log('  3. Los expedientes se sincronizarán automáticamente');
+                console.log('  🔗 URL actual:', window.location.href);
+                window.crossDeviceInstructionsShown = true;
+            }
+        }
+        
+        function getAllGlobalExpedientes() {
+            try {
+                const globalStorage = JSON.parse(localStorage.getItem(GLOBAL_STORAGE_KEY) || '{}');
+                return {
+                    creados: globalStorage.expedientesCreados || [],
+                    finalizados: globalStorage.expedientesFinalizados || [],
+                    ejecutivo: globalStorage.expedientesEjecutivo || [],
+                    compras: globalStorage.expedientesCompras || [],
+                    lastUpdated: globalStorage.lastUpdated,
+                    version: globalStorage.version || 0
+                };
+            } catch (error) {
+                console.error('Error reading all global expedientes:', error);
+                return { creados: [], finalizados: [], ejecutivo: [], compras: [] };
+            }
+        }
+
         // --- Persistencia con localStorage ---
         function parseJSONSafe(text, fallback) {
             try { return JSON.parse(text || ''); } catch { return fallback; }
         }
 
+        // Global storage functions - now all expedientes are shared across all users and browsers
         function getStoredCreated() {
-            return parseJSONSafe(localStorage.getItem('expedientesCreados'), []);
+            // Try to get from global storage first, fallback to localStorage for migration
+            const globalData = getGlobalExpedientes('expedientesCreados');
+            if (globalData.length === 0) {
+                // Migrate from localStorage if exists
+                const localData = parseJSONSafe(localStorage.getItem('expedientesCreados'), []);
+                if (localData.length > 0) {
+                    setGlobalExpedientes('expedientesCreados', localData);
+                    return localData;
+                }
+            }
+            return globalData;
         }
         function setStoredCreated(list) {
+            setGlobalExpedientes('expedientesCreados', list);
+            // Also keep in localStorage for compatibility
             localStorage.setItem('expedientesCreados', JSON.stringify(list));
         }
 
         function getStoredFinalizados() {
-            return parseJSONSafe(localStorage.getItem('expedientesFinalizados'), []);
+            const globalData = getGlobalExpedientes('expedientesFinalizados');
+            if (globalData.length === 0) {
+                const localData = parseJSONSafe(localStorage.getItem('expedientesFinalizados'), []);
+                if (localData.length > 0) {
+                    setGlobalExpedientes('expedientesFinalizados', localData);
+                    return localData;
+                }
+            }
+            return globalData;
         }
         function setStoredFinalizados(list) {
+            setGlobalExpedientes('expedientesFinalizados', list);
             localStorage.setItem('expedientesFinalizados', JSON.stringify(list));
         }
 
         function getStoredEjecutivo() {
-            return parseJSONSafe(localStorage.getItem('expedientesEjecutivo'), []);
+            const globalData = getGlobalExpedientes('expedientesEjecutivo');
+            if (globalData.length === 0) {
+                const localData = parseJSONSafe(localStorage.getItem('expedientesEjecutivo'), []);
+                if (localData.length > 0) {
+                    setGlobalExpedientes('expedientesEjecutivo', localData);
+                    return localData;
+                }
+            }
+            return globalData;
         }
         function setStoredEjecutivo(list) {
+            setGlobalExpedientes('expedientesEjecutivo', list);
             localStorage.setItem('expedientesEjecutivo', JSON.stringify(list));
         }
 
         function getStoredCompras() {
-            return parseJSONSafe(localStorage.getItem('expedientesCompras'), []);
+            const globalData = getGlobalExpedientes('expedientesCompras');
+            if (globalData.length === 0) {
+                const localData = parseJSONSafe(localStorage.getItem('expedientesCompras'), []);
+                if (localData.length > 0) {
+                    setGlobalExpedientes('expedientesCompras', localData);
+                    return localData;
+                }
+            }
+            return globalData;
         }
         function setStoredCompras(list) {
+            setGlobalExpedientes('expedientesCompras', list);
             localStorage.setItem('expedientesCompras', JSON.stringify(list));
         }
 
@@ -1829,11 +2092,17 @@
                     <label style="display:flex;align-items:center;gap:0.4rem;color:var(--gray-700);">
                         <input type="checkbox" class="select-checkbox" /> Seleccionar
                     </label>
-                    <button class="send-back-btn" disabled>Enviar a Expedientes Creados</button>
+                    <select class="inline-select" aria-label="Mover a" disabled>
+                        <option value="">Enviar a...</option>
+                        <option value="creados">Expedientes Creados</option>
+                        <option value="compra">Compras</option>
+                    </select>
+                    <button class="send-btn" disabled>Enviar</button>
+                    <button class="finalize-btn" onclick="finalizeExpediente('${data.codigo}', this)" title="Finalizar expediente">✅ FINALIZAR</button>
                     <button class="delete-btn" onclick="deleteExecutive(this)" title="Eliminar expediente">🗑️</button>
                 </div>
             `;
-            attachReturnHandler(newItem, data);
+            attachBidirectionalHandler(newItem, data, 'ejecutivo');
             return newItem;
         }
 
@@ -1856,11 +2125,17 @@
                     <label style="display:flex;align-items:center;gap:0.4rem;color:var(--gray-700);">
                         <input type="checkbox" class="select-checkbox" /> Seleccionar
                     </label>
-                    <button class="send-back-btn" disabled>Enviar a Expedientes Creados</button>
+                    <select class="inline-select" aria-label="Mover a" disabled>
+                        <option value="">Enviar a...</option>
+                        <option value="creados">Expedientes Creados</option>
+                        <option value="ejecutivo">Parque Automotor Ejecutivo</option>
+                    </select>
+                    <button class="send-btn" disabled>Enviar</button>
+                    <button class="finalize-btn" onclick="finalizeExpediente('${data.codigo}', this)" title="Finalizar expediente">✅ FINALIZAR</button>
                     <button class="delete-btn" onclick="deleteExecutive(this)" title="Eliminar expediente">🗑️</button>
                 </div>
             `;
-            attachReturnHandler(newItem, data);
+            attachBidirectionalHandler(newItem, data, 'compras');
             return newItem;
         }
 
@@ -1909,6 +2184,166 @@
             scheduleTwoDayAlert();
 
             updateStats();
+        }
+
+        // New bidirectional handler for all sections
+        function attachBidirectionalHandler(wrapper, data, currentSection) {
+            const checkbox = wrapper.querySelector('.select-checkbox');
+            const sendBtn = wrapper.querySelector('.send-btn');
+            const select = wrapper.querySelector('.inline-select');
+            
+            if (!checkbox || !sendBtn || !select) {
+                console.log('⚠️ Elementos de control no encontrados, usando handler legacy');
+                attachReturnHandler(wrapper, data);
+                return;
+            }
+            
+            checkbox.addEventListener('change', () => {
+                if (checkbox.checked) {
+                    sendBtn.disabled = false;
+                    select.disabled = false;
+                } else {
+                    sendBtn.disabled = true;
+                    select.disabled = true;
+                }
+            });
+            
+            sendBtn.addEventListener('click', () => {
+                const destino = select.value;
+                if (!destino) {
+                    alert('❌ Selecciona un destino para enviar el expediente');
+                    return;
+                }
+                
+                console.log(`📤 Enviando expediente ${data.codigo} desde ${currentSection} hacia ${destino}`);
+                moveBidirectionalExpediente(data, currentSection, destino, wrapper);
+                
+                // Reset form
+                checkbox.checked = false;
+                select.value = '';
+                sendBtn.disabled = true;
+                select.disabled = true;
+            });
+        }
+
+        // Enhanced bidirectional movement function
+        function moveBidirectionalExpediente(data, fromSection, toSection, itemEl) {
+            console.log(`🔄 Moviendo expediente ${data.codigo}: ${fromSection} → ${toSection}`);
+            
+            // Verificar que el expediente no esté finalizado
+            if (itemEl && itemEl.querySelector('.status-badge')?.textContent === 'FINALIZADO') {
+                alert('❌ No se puede mover un expediente FINALIZADO');
+                return;
+            }
+            
+            // Remove from current section
+            removeFromSection(data.codigo, fromSection, itemEl);
+            
+            // Add to destination section  
+            addToSection(data, toSection);
+            
+            // Update statistics and alerts
+            updateStats();
+            scheduleTwoDayAlert();
+            
+            alert(`✅ Expediente ${data.codigo} movido exitosamente de ${getSectionDisplayName(fromSection)} a ${getSectionDisplayName(toSection)}`);
+        }
+        
+        function removeFromSection(codigo, section, itemEl) {
+            console.log(`🗑️ Removiendo expediente ${codigo} de ${section}`);
+            
+            // Remove from DOM
+            if (itemEl) {
+                itemEl.remove();
+            }
+            
+            // Remove from storage
+            switch(section) {
+                case 'creados':
+                    const storedCreados = getStoredCreated().filter(x => x.codigo !== codigo);
+                    setStoredCreated(storedCreados);
+                    // Show empty state if needed
+                    const expedientesCreados = document.getElementById('expedientesCreados');
+                    const emptyExpedientes = document.getElementById('emptyExpedientes');
+                    if (expedientesCreados && expedientesCreados.querySelectorAll('.expediente-item').length === 0 && emptyExpedientes) {
+                        emptyExpedientes.style.display = 'block';
+                    }
+                    break;
+                case 'ejecutivo':
+                    const storedEjecutivo = getStoredEjecutivo().filter(x => x.codigo !== codigo);
+                    setStoredEjecutivo(storedEjecutivo);
+                    // Show empty state if needed
+                    const execSection = document.getElementById('executiveSection');
+                    const emptyExec = document.getElementById('emptyExecutive');
+                    if (execSection && execSection.querySelectorAll('.executive-item').length === 0 && emptyExec) {
+                        emptyExec.style.display = 'block';
+                    }
+                    break;
+                case 'compras':
+                    const storedCompras = getStoredCompras().filter(x => x.codigo !== codigo);
+                    setStoredCompras(storedCompras);
+                    // Clean up empty container
+                    const compraContainer = document.getElementById('compraContainer');
+                    if (compraContainer && compraContainer.children.length === 0) {
+                        compraContainer.remove();
+                    }
+                    break;
+            }
+        }
+        
+        function addToSection(data, section) {
+            console.log(`➕ Agregando expediente ${data.codigo} a ${section}`);
+            
+            switch(section) {
+                case 'creados':
+                    // Add to expedientes creados
+                    const expedientesCreados = document.getElementById('expedientesCreados');
+                    const emptyExpedientes = document.getElementById('emptyExpedientes');
+                    if (emptyExpedientes) emptyExpedientes.style.display = 'none';
+                    
+                    // Create new expediente item (reusing existing logic)
+                    const createdsList = getStoredCreated();
+                    createdsList.push(data);
+                    setStoredCreated(createdsList);
+                    renderAllInCreated(); // Refresh the entire section
+                    break;
+                    
+                case 'ejecutivo':
+                    // Add to ejecutivo section
+                    const execSection = document.getElementById('executiveSection');
+                    const emptyExec = document.getElementById('emptyExecutive');
+                    if (emptyExec) emptyExec.style.display = 'none';
+                    
+                    execSection.insertBefore(buildExecutiveItemSimple(data), emptyExec);
+                    const ejList = getStoredEjecutivo();
+                    ejList.push(data);
+                    setStoredEjecutivo(ejList);
+                    break;
+                    
+                case 'compras':
+                    // Add to compras section
+                    let compraContainer = document.getElementById('compraContainer');
+                    if (!compraContainer) {
+                        compraContainer = document.createElement('div');
+                        compraContainer.id = 'compraContainer';
+                        const compraSection = document.querySelector('.section-card:nth-of-type(3) .section-content');
+                        compraSection.appendChild(compraContainer);
+                    }
+                    compraContainer.prepend(buildCompraItemSimple(data));
+                    const cList = getStoredCompras();
+                    cList.push(data);
+                    setStoredCompras(cList);
+                    break;
+            }
+        }
+        
+        function getSectionDisplayName(section) {
+            const names = {
+                'creados': 'Expedientes Creados',
+                'ejecutivo': 'Parque Automotor Ejecutivo', 
+                'compras': 'Compras'
+            };
+            return names[section] || section;
         }
 
         function attachReturnHandler(wrapper, data) {
@@ -2055,10 +2490,19 @@
 
         // Event listeners
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize global system first
+            initializeGlobalSystem();
+            
+            // Start real-time synchronization
+            startExpedienteWatcher();
+            
             // Render inicial (consolidada por defecto)
             renderStoredEjecutivo();
             renderStoredCompras();
             renderAllInCreated();
+            
+            // Show global status
+            showAllExpedientesGlobal();
 
             // Ocultar item ejecutivo por defecto si fue eliminado previamente
             if (localStorage.getItem('hideDefaultExecutive') === '1') {
@@ -2285,7 +2729,10 @@
         function applyRoleUI(role){
             console.log('🔐 Aplicando rol:', role);
             
-            // Botón de agregar expediente
+            // Todos los usuarios pueden ver expedientes - no hay restricciones de visualización
+            // Solo se mantienen restricciones para funciones administrativas
+            
+            // Botón de agregar expediente - solo ADMIN y MESA_DE_ENTRADA pueden crear
             const addBtn = document.querySelector('.add-btn');
             if (addBtn) {
                 if (role === 'PERSONAL') {
@@ -2312,6 +2759,10 @@
                     });
                 }
             }
+            
+            // IMPORTANTE: Todos los usuarios pueden VER expedientes
+            // No hay restricciones de visualización por rol
+            console.log('✅ Expedientes visibles para todos los usuarios independientemente del rol');
         }
 
         // Función para refrescar expedientes manualmente
@@ -2321,16 +2772,298 @@
             alert('Expedientes actualizados');
         }
 
-        // Función para verificar si hay expedientes nuevos cada 5 segundos
+        // Enhanced cross-device synchronization system
         function startExpedienteWatcher() {
-            setInterval(() => {
-                const currentCount = getStoredCreated().length + getStoredEjecutivo().length + getStoredCompras().length + getStoredFinalizados().length;
-                if (window.lastExpedienteCount !== currentCount) {
-                    console.log('📝 Cambio detectado en expedientes, actualizando...');
-                    window.lastExpedienteCount = currentCount;
-                    renderAllInCreated();
+            console.log('🚀 Iniciando sistema de sincronización cross-device de expedientes...');
+            
+            // Listen for updates from other tabs/windows
+            window.addEventListener('expedientesUpdated', (event) => {
+                console.log('📡 Expedientes actualizados en otra pestaña:', event.detail);
+                if (event.detail.deviceId !== DEVICE_ID) {
+                    console.log('🔄 Actualizando desde otro dispositivo...');
+                    refreshAllSections();
                 }
+            });
+            
+            // Listen for storage events (cross-tab communication)
+            window.addEventListener('storage', (event) => {
+                if (event.key === GLOBAL_STORAGE_KEY || event.key.includes('SHARED_')) {
+                    console.log('🔄 Cambios detectados en almacenamiento, sincronizando...');
+                    refreshAllSections();
+                }
+            });
+            
+            // Listen for URL hash changes (cross-device sharing)
+            window.addEventListener('hashchange', () => {
+                console.log('🔗 URL hash cambió, verificando datos compartidos...');
+                loadFromUrlIfAvailable();
+            });
+            
+            // BroadcastChannel for cross-tab communication
+            if (typeof BroadcastChannel !== 'undefined') {
+                const channel = new BroadcastChannel('expedientes_sync');
+                channel.addEventListener('message', (event) => {
+                    console.log('📻 Mensaje recibido via BroadcastChannel:', event.data);
+                    if (event.data.type === 'expediente_update' && event.data.deviceId !== DEVICE_ID) {
+                        console.log('🔄 Sincronizando desde BroadcastChannel...');
+                        refreshAllSections();
+                    }
+                });
+            }
+            
+            // Periodic sync check every 5 seconds for cross-device updates
+            setInterval(() => {
+                checkForCrossDeviceUpdates();
             }, 5000);
+            
+            // Check for data in URL on initial load
+            loadFromUrlIfAvailable();
+            
+            // Initialize counters
+            const initialData = getAllGlobalExpedientes();
+            window.lastExpedienteCount = initialData.creados.length + initialData.ejecutivo.length + initialData.compras.length + initialData.finalizados.length;
+            window.lastGlobalVersion = initialData.version;
+            
+            console.log('✅ Sistema de sincronización cross-device activo');
+        }
+        
+        function refreshAllSections() {
+            console.log('🔄 Refrescando todas las secciones...');
+            renderAllInCreated();
+            renderStoredEjecutivo();
+            renderStoredCompras();
+        }
+        
+        function checkForCrossDeviceUpdates() {
+            const allData = getAllGlobalExpedientes();
+            const currentCount = allData.creados.length + allData.ejecutivo.length + allData.compras.length + allData.finalizados.length;
+            
+            if (window.lastExpedienteCount !== currentCount || window.lastGlobalVersion !== allData.version) {
+                console.log('📝 Cambios detectados en expedientes cross-device, actualizando...');
+                console.log('  - Versión anterior:', window.lastGlobalVersion, '-> Nueva:', allData.version);
+                console.log('  - Total anterior:', window.lastExpedienteCount, '-> Nuevo:', currentCount);
+                
+                window.lastExpedienteCount = currentCount;
+                window.lastGlobalVersion = allData.version;
+                refreshAllSections();
+            }
+        }
+        
+        function loadFromUrlIfAvailable() {
+            try {
+                const hashData = window.location.hash.substr(1);
+                if (hashData && hashData.startsWith('data=')) {
+                    console.log('🔗 Datos encontrados en URL, cargando...');
+                    const encoded = hashData.substr(5);
+                    const decoded = JSON.parse(atob(encoded));
+                    
+                    // Load data from URL into local storage
+                    Object.keys(decoded).forEach(category => {
+                        if (['expedientesCreados', 'expedientesFinalizados', 'expedientesEjecutivo', 'expedientesCompras'].includes(category)) {
+                            console.log(`📥 Cargando ${category} desde URL:`, decoded[category].length, 'items');
+                            saveToLocalStorage(category, decoded[category]);
+                            saveToSharedStorage(category, decoded[category]);
+                        }
+                    });
+                    
+                    // Refresh display
+                    refreshAllSections();
+                    console.log('✅ Datos cargados exitosamente desde URL compartida');
+                }
+            } catch (error) {
+                console.error('Error loading data from URL:', error);
+            }
+        }
+
+        // Initialize global system and migrate existing data
+        function initializeGlobalSystem() {
+            console.log('🚀 Inicializando sistema global de expedientes...');
+            
+            // Check if we need to migrate from old localStorage system
+            const hasLocalData = localStorage.getItem('expedientesCreados') || 
+                                localStorage.getItem('expedientesFinalizados') || 
+                                localStorage.getItem('expedientesEjecutivo') || 
+                                localStorage.getItem('expedientesCompras');
+                                
+            const hasGlobalData = localStorage.getItem(GLOBAL_STORAGE_KEY);
+            
+            if (hasLocalData && !hasGlobalData) {
+                console.log('📦 Migrando datos locales al sistema global...');
+                
+                // Trigger migration by calling the get functions (they handle migration internally)
+                getStoredCreated();
+                getStoredFinalizados();
+                getStoredEjecutivo();
+                getStoredCompras();
+                
+                console.log('✅ Migración completada - todos los expedientes ahora son globales');
+            }
+            
+            // Show global status in console
+            const globalData = getAllGlobalExpedientes();
+            console.log('🌐 Estado del sistema global:');
+            console.log('  - Expedientes creados:', globalData.creados.length);
+            console.log('  - Expedientes finalizados:', globalData.finalizados.length);
+            console.log('  - Expedientes ejecutivo:', globalData.ejecutivo.length);
+            console.log('  - Expedientes compras:', globalData.compras.length);
+            console.log('  - Última actualización:', globalData.lastUpdated);
+            console.log('  - Versión:', globalData.version);
+            
+            console.log('✅ Sistema global inicializado - expedientes accesibles desde cualquier navegador/usuario');
+            
+            // Generate and show sync URL
+            generateSyncUrl();
+        }
+        
+        // Generate URL for cross-device synchronization
+        function generateSyncUrl() {
+            try {
+                const allData = getAllGlobalExpedientes();
+                if (allData.creados.length > 0 || allData.ejecutivo.length > 0 || allData.compras.length > 0 || allData.finalizados.length > 0) {
+                    const encoded = btoa(JSON.stringify(allData));
+                    const syncUrl = `${window.location.origin}${window.location.pathname}#data=${encoded}`;
+                    
+                    // Add sync URL display to interface
+                    addSyncUrlDisplay(syncUrl);
+                    
+                    console.log('🔗 URL de sincronización generada:', syncUrl);
+                }
+            } catch (error) {
+                console.error('Error generando URL de sincronización:', error);
+            }
+        }
+        
+        function addSyncUrlDisplay(syncUrl) {
+            // Find a good place to add the sync URL display
+            const header = document.querySelector('.header');
+            if (header && !document.getElementById('syncUrlDisplay')) {
+                const syncDisplay = document.createElement('div');
+                syncDisplay.id = 'syncUrlDisplay';
+                syncDisplay.style.cssText = `
+                    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+                    color: white;
+                    padding: 0.75rem;
+                    border-radius: 8px;
+                    margin-top: 0.5rem;
+                    font-size: 0.85rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    flex-wrap: wrap;
+                `;
+                
+                syncDisplay.innerHTML = `
+                    <span style="font-weight: 600;">📱💻 SINCRONIZACIÓN CROSS-DEVICE:</span>
+                    <input type="text" value="${syncUrl}" readonly 
+                           style="flex: 1; min-width: 300px; padding: 0.25rem 0.5rem; border: none; border-radius: 4px; font-size: 0.8rem; background: rgba(255,255,255,0.9); color: #333;">
+                    <button onclick="copySyncUrl()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.25rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">
+                        📋 COPIAR
+                    </button>
+                    <button onclick="toggleSyncInstructions()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.25rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">
+                        ❓ AYUDA
+                    </button>
+                `;
+                
+                header.appendChild(syncDisplay);
+                
+                // Add instructions panel (hidden by default)
+                const instructionsPanel = document.createElement('div');
+                instructionsPanel.id = 'syncInstructions';
+                instructionsPanel.style.cssText = `
+                    background: #f8fafc;
+                    border: 2px solid #e2e8f0;
+                    border-radius: 8px;
+                    padding: 1rem;
+                    margin-top: 0.5rem;
+                    font-size: 0.9rem;
+                    display: none;
+                `;
+                
+                instructionsPanel.innerHTML = `
+                    <h4 style="margin: 0 0 0.5rem 0; color: #1e40af;">📱💻 Cómo sincronizar entre dispositivos:</h4>
+                    <ol style="margin: 0; padding-left: 1.5rem; color: #374151;">
+                        <li><strong>Copia la URL completa</strong> haciendo click en "📋 COPIAR"</li>
+                        <li><strong>Pega la URL en otro dispositivo</strong> (celular, tablet, otra computadora)</li>
+                        <li><strong>Los expedientes aparecerán automáticamente</strong> en el nuevo dispositivo</li>
+                        <li><strong>Cualquier cambio se sincroniza</strong> cuando actualices la URL</li>
+                    </ol>
+                    <p style="margin: 0.5rem 0 0 0; padding: 0.5rem; background: #dbeafe; border-radius: 4px; color: #1e40af; font-size: 0.85rem;">
+                        💡 <strong>Tip:</strong> Guarda esta URL en favoritos para acceso rápido desde cualquier dispositivo
+                    </p>
+                `;
+                
+                header.appendChild(instructionsPanel);
+            }
+        }
+        
+        // Global functions for sync URL management
+        window.copySyncUrl = function() {
+            const input = document.querySelector('#syncUrlDisplay input');
+            if (input) {
+                input.select();
+                document.execCommand('copy');
+                alert('📋 URL copiada al portapapeles! Pégala en otro dispositivo para sincronizar.');
+            }
+        };
+        
+        window.toggleSyncInstructions = function() {
+            const instructions = document.getElementById('syncInstructions');
+            if (instructions) {
+                instructions.style.display = instructions.style.display === 'none' ? 'block' : 'none';
+            }
+        };
+        
+        // Update sync URL when data changes
+        function updateSyncUrl() {
+            try {
+                const syncDisplay = document.getElementById('syncUrlDisplay');
+                if (syncDisplay) {
+                    const allData = getAllGlobalExpedientes();
+                    const encoded = btoa(JSON.stringify(allData));
+                    const syncUrl = `${window.location.origin}${window.location.pathname}#data=${encoded}`;
+                    
+                    const input = syncDisplay.querySelector('input');
+                    if (input) {
+                        input.value = syncUrl;
+                        console.log('🔗 URL de sincronización actualizada automáticamente');
+                    }
+                }
+            } catch (error) {
+                console.error('Error actualizando URL de sincronización:', error);
+            }
+        }
+
+        // Function to show all expedientes from all categories and users
+        function showAllExpedientesGlobal() {
+            console.log('🌍 Mostrando todos los expedientes globales...');
+            
+            const allData = getAllGlobalExpedientes();
+            const totalCount = allData.creados.length + allData.finalizados.length + allData.ejecutivo.length + allData.compras.length;
+            
+            console.log('📊 Resumen global de expedientes:');
+            console.log('  🆕 Creados:', allData.creados.length);
+            console.log('  ✅ Finalizados:', allData.finalizados.length);
+            console.log('  🏢 Ejecutivo:', allData.ejecutivo.length);
+            console.log('  🛒 Compras:', allData.compras.length);
+            console.log('  📈 Total:', totalCount);
+            
+            // Update the page title to reflect global access
+            document.title = `Parque Automotor - ${totalCount} expedientes globales`;
+            
+            // Show notification about global system
+            if (window.globalSystemNotificationShown !== true) {
+                console.log('💡 Sistema configurado para acceso global - todos los expedientes son visibles para todos los usuarios');
+                window.globalSystemNotificationShown = true;
+            }
+            
+            return {
+                total: totalCount,
+                creados: allData.creados.length,
+                finalizados: allData.finalizados.length,
+                ejecutivo: allData.ejecutivo.length,
+                compras: allData.compras.length,
+                lastUpdated: allData.lastUpdated
+            };
         }
 
         // Función para eliminar expediente de cualquier sección

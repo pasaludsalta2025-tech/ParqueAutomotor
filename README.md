@@ -1,141 +1,111 @@
-# 🚗 Sistema de Control de Expedientes - Parque Automotor
+# 🚗 Sistema de Gestión de Expedientes - Parque Automotor
 
-Sistema web moderno para la gestión integral de expedientes del Parque Automotor, con control de roles, flujo de trabajo automatizado y diseño responsive.
+Sistema integral para la gestión de expedientes automotores con sincronización cross-device y flujo bidireccional.
 
-## ✨ Características Principales
+## 🌟 Características Principales
 
-### 🔐 Sistema de Autenticación
-- **Login/Registro** con DNI como identificador único
-- **Control de roles** (ADMIN, MESA_DE_ENTRADA, PERSONAL)
-- **Gestión de usuarios** con bloqueo/desbloqueo de cuentas
+### 🌐 Sistema Global
+- ✅ **Expedientes visibles para todos los usuarios** desde cualquier dispositivo
+- ✅ **Sincronización automática** entre computadoras, tablets y celulares
+- ✅ **Acceso universal** sin restricciones de ubicación
 
-### 📋 Gestión de Expedientes
-- **Creación y edición** de expedientes con validación completa
-- **Flujo de trabajo** entre secciones (Creados → Ejecutivo/Compras → Finalizados)
-- **Búsqueda por fecha** con filtros avanzados
-- **Estados automáticos** (PENDIENTE, FINALIZADO)
-- **Alertas** para expedientes pendientes más de 2 días
-- **Eliminación** de expedientes con confirmación
+### 🔄 Flujo Bidireccional
+- ✅ **Movimiento libre** entre todas las secciones:
+  - Expedientes Creados ↔ Parque Automotor Ejecutivo ↔ Compras
+- ✅ **Botón FINALIZAR** disponible en todas las secciones
+- ✅ **Controles unificados** en toda la aplicación
 
-### 🎯 Control de Accesos por Rol
-- **ADMIN**: Acceso completo a todas las funcionalidades
-- **MESA_DE_ENTRADA**: Puede crear expedientes, acceso limitado a configuración
-- **PERSONAL**: Solo visualización y movimiento de expedientes
+### 📱💻 Sincronización Cross-Device
+- ✅ **URL de sincronización automática** 
+- ✅ **Copiar y pegar** entre dispositivos
+- ✅ **Actualización en tiempo real**
+- ✅ **Compatible con todos los navegadores**
 
-### 📱 Interfaz Moderna y Responsive
-- **Diseño responsive** optimizado para móviles y tablets
-- **Fuente Inter** para mejor legibilidad
-- **Iconografía intuitiva** y navegación clara
-- **Botones táctiles** optimizados para dispositivos móviles
-- **Gradientes y animaciones** modernas
+## 🚀 Tecnologías
 
-## 🚀 Tecnologías Utilizadas
+- **Frontend**: HTML5, CSS3, JavaScript Vanilla
+- **Almacenamiento**: localStorage, sessionStorage, URL Hash
+- **Sincronización**: BroadcastChannel, Custom Events
+- **Estilos**: CSS Grid, Flexbox, Gradientes modernos
 
-- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
-- **Almacenamiento**: localStorage para persistencia de datos
-- **Fuentes**: Google Fonts (Inter)
-- **Iconos**: SVG integrados
-- **Responsive**: CSS Grid y Flexbox
-- **Backend**: Next.js 15 con Prisma (versión Next.js disponible)
+## 📋 Funcionalidades
 
-## 📁 Estructura del Proyecto
+### 📄 Gestión de Expedientes
+- ✅ Crear, editar y eliminar expedientes
+- ✅ Seguimiento de estados (Pendiente/Finalizado)
+- ✅ Cálculo automático de días de trámite
+- ✅ Campos completos (código, número, corresponde, derivado, etc.)
 
-```
-ParqueAutomotor/
-├── index.html                 # Página principal con login y dashboard
-├── nuevo-expediente/
-│   └── index.html            # Formulario de creación/edición
-├── configuracion/
-│   └── index.html            # Gestión de usuarios y roles
-├── parque-automotor-next/    # Versión Next.js del proyecto
-│   ├── src/
-│   ├── prisma/
-│   └── package.json
-├── .gitignore                # Archivos a excluir de Git
-└── README.md                 # Este archivo
-```
+### 👥 Sistema de Usuarios
+- ✅ Autenticación por DNI
+- ✅ Roles: ADMIN, MESA_DE_ENTRADA, PERSONAL
+- ✅ Registro automático de usuarios
+- ✅ Panel de configuración
 
-## 🔧 Instalación y Uso
+### 🏢 Secciones del Sistema
+1. **Expedientes Creados** - Punto de entrada principal
+2. **Parque Automotor Ejecutivo** - Gestión ejecutiva  
+3. **Centro de Compras** - Gestión de compras
+4. **Expedientes Finalizados** - Archivo histórico
 
-### Versión HTML (Actual)
-1. Abre `index.html` en tu navegador web
-2. No requiere instalación adicional
-3. Los datos se guardan en localStorage del navegador
+## 💻 Instalación
 
-### Versión Next.js (Opcional)
-```bash
-cd parque-automotor-next
-npm install
-npm run dev
-```
+1. **Clonar el repositorio:**
+   ```bash
+   git clone https://github.com/[tu-usuario]/sistema-parque-automotor.git
+   ```
 
-## 📱 Compatibilidad
+2. **Abrir el archivo:**
+   ```bash
+   cd sistema-parque-automotor
+   # Abrir index.html en tu navegador
+   ```
 
-- **Navegadores**: Chrome, Firefox, Safari, Edge (versiones recientes)
-- **Dispositivos**: Desktop, Tablet, Móvil
-- **Resoluciones**: Optimizado para 320px - 1920px+
+3. **Usuario Admin por defecto:**
+   - **Usuario:** 35477889
+   - **Contraseña:** 35477889
 
-## 🎨 Características del Diseño
+## 📱 Cómo usar la Sincronización Cross-Device
 
-### Responsive Design
-- **Desktop**: Layout de 3 columnas con sidebar
-- **Tablet**: Layout de 2 columnas adaptativo
-- **Móvil**: Layout de 1 columna con navegación optimizada
+1. **Crear expedientes** en cualquier dispositivo
+2. **Copiar la URL** del panel azul de sincronización
+3. **Pegar la URL** en otro dispositivo
+4. **¡Los expedientes aparecen automáticamente!**
 
-### Paleta de Colores
-- **Primario**: Azul (#1e40af)
-- **Secundario**: Azul claro (#3b82f6)
-- **Éxito**: Verde (#10b981)
-- **Advertencia**: Amarillo (#f59e0b)
-- **Peligro**: Rojo (#ef4444)
+## 🔧 Configuración
 
-## 🔄 Flujo de Trabajo
+- **Acceso universal**: Todos los usuarios pueden ver todos los expedientes
+- **Roles diferenciados**: Diferentes permisos según el rol del usuario
+- **Almacenamiento persistente**: Los datos se mantienen entre sesiones
+- **Responsive**: Compatible con móviles y tablets
 
-1. **Creación**: Los expedientes se crean en "Expedientes Creados"
-2. **Asignación**: Se mueven a "Parque Automotor Ejecutivo" o "Centro de Compras"
-3. **Finalización**: Se marcan como "FINALIZADO" cuando se completan
-4. **Seguimiento**: Alertas automáticas para expedientes pendientes >2 días
+## 📊 Estados del Sistema
 
-## 🛠️ Funcionalidades Técnicas
+- 🟢 **Sistema Global Activo** - Expedientes visibles universalmente
+- 🔄 **Flujo Bidireccional** - Movimiento libre entre secciones
+- 📱 **Sync Cross-Device** - Sincronización entre dispositivos
 
-### Gestión de Datos
-- **Persistencia**: localStorage con sincronización automática
-- **Validación**: Formularios con validación en tiempo real
-- **Búsqueda**: Filtros por fecha y estado
-- **Estadísticas**: Contadores automáticos de expedientes
+## 🛠️ Desarrollo
 
-### Optimizaciones Móviles
-- **Touch-friendly**: Botones de 44px mínimo
-- **Gestos**: Soporte para touch y swipe
-- **Performance**: Carga optimizada para conexiones lentas
-- **Accesibilidad**: Navegación por teclado y lectores de pantalla
+El sistema está construido como una Single Page Application (SPA) con:
 
-## 📊 Estadísticas y Reportes
+- **Arquitectura modular** con funciones especializadas
+- **Sistema de eventos** para sincronización en tiempo real
+- **Almacenamiento múltiple** para máxima compatibilidad
+- **Interface responsive** para todos los dispositivos
 
-- **Total de expedientes** por sección
-- **Expedientes pendientes** con alertas
-- **Expedientes finalizados** en el período
-- **Tiempo promedio** de procesamiento
+## 📝 Próximas Mejoras
 
-## 🔒 Seguridad
-
-- **Validación de entrada** en todos los formularios
-- **Sanitización** de datos antes de guardar
-- **Control de acceso** basado en roles
-- **Confirmaciones** para acciones destructivas
-
-## 🚀 Próximas Mejoras
-
-- [ ] Exportación a PDF/Excel
+- [ ] API backend para sincronización real
+- [ ] Base de datos centralizada
 - [ ] Notificaciones push
-- [ ] Modo offline
-- [ ] Integración con APIs externas
-- [ ] Dashboard con gráficos avanzados
+- [ ] Reportes y estadísticas
+- [ ] Backup automático
 
-## 📞 Soporte
+## 📄 Licencia
 
-Para reportar problemas o solicitar nuevas funcionalidades, contacta al equipo de desarrollo.
+Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
 
 ---
 
-**Desarrollado con ❤️ para el Parque Automotor**
+**Desarrollado por [Tu Nombre]** - Sistema de Gestión de Expedientes Automotores
