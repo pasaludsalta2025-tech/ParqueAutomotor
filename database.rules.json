@@ -1,0 +1,9 @@
+{
+  "rules": {
+    "expedientes": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}
+

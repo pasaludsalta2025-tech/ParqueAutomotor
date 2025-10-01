@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "parque-automotor-db88c"
+  },
+  "targets": {
+    "parque-automotor-db88c": {
+      "hosting": {
+        "parque-automotor-salta": [
+          "parque-automotor-salta"
+        ]
+      }
+    }
+  }
+}
+
